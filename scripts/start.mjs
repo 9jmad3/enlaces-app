@@ -10,6 +10,7 @@ const child = spawn(
     stdio: "inherit",
     env: {
       ...process.env,
+      __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS: "enlaces-app-production.up.railway.app",
       HOST: host,
       PORT: port,
     },
