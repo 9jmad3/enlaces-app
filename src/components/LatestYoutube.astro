@@ -1,0 +1,51 @@
+---
+
+---
+
+<script>
+  import {loadVideo} from "../controllers/videoPlayer.controller";
+
+</script>
+
+<div class="vid__container">
+  <h2 class="vid__title">My latest Video ❤️</h2>
+  <img class="heart__loader" src="./img/loadcat.gif" alt="loader" />
+  <iframe
+    class="latestVideoEmbed"
+    data-vnum="0"
+    width="560"
+    height="315"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+    id="ytchannel"
+    title="YouTube video player"></iframe>
+</div>
+
+<style>
+  .vid__container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bolder;
+    height: auto;
+    padding: 1rem;
+  }
+  .latestVideoEmbed {
+    border-width: 0px;
+    overflow: hidden;
+    border-radius:12px;
+    width: calc(100% - 3rem);
+    min-height: 30rem;
+    min-width: 303px;
+  }
+  .vid__title {
+    margin: 1rem 0;
+  }
+
+  :global(.dark) .vid__container {
+    color: aqua;
+  }
+</style>

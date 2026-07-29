@@ -1,0 +1,88 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Boton from "../components/Boton.astro";
+import Profile from "../components/Profile.astro";
+import { getProfileBySlug, profiles } from "../data/profiles.js";
+
+export function getStaticPaths() {
+  return profiles.map((profile) => ({
+    params: { slug: profile.slug },
+    props: { profile },
+  }));
+}
+
+const { profile } = Astro.props;
+
+if (!profile) {
+  throw new Error("Profile not found");
+}
+---
+
+<Layout title={profile.siteTitle} description={profile.siteDescription} image={profile.image}>
+  <main>
+    <Profile name={profile.name} description={profile.description} bio={profile.bio} image={profile.image} />
+    <Boton links={profile.links} />
+    <section class="mini-cta">
+      <p class="mini-cta__title">¿Quieres el tuyo?</p>
+      <p class="mini-cta__text">Un espacio simple para enlaces y presencia personal.</p>
+      <a href={profile.contactHref} target="_blank" rel="noopener noreferrer">{profile.contactLabel}</a>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  main {
+    width: 100%;
+    padding: 0 0 2.2rem;
+    gap: 0;
+  }
+
+  .mini-cta {
+    width: calc(100% - 2rem);
+    margin: 1.2rem 1rem 0;
+    padding: 0.95rem 1rem 0;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+  }
+
+  .mini-cta__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+  }
+
+  .mini-cta__text {
+    margin: 0.45rem auto 0;
+    max-width: 28rem;
+    font-size: 1.22rem;
+    line-height: 1.6;
+    color: var(--muted-text);
+  }
+
+  .mini-cta a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.85rem;
+    padding: 0.8rem 1.05rem;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-highligth);
+    text-decoration: none;
+    font-size: 1.15rem;
+    font-weight: 700;
+    box-shadow: none;
+  }
+
+  @media (max-width: 768px) {
+    .mini-cta {
+      width: calc(100% - 1.4rem);
+      margin: 0.95rem 0.7rem 0;
+      padding-top: 0.85rem;
+    }
+  }
+</style>

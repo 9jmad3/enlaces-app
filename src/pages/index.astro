@@ -1,0 +1,20 @@
+---
+import { getProfileBySlug } from "../data/profiles.js";
+
+const profile = getProfileBySlug("jmaledom");
+
+if (!profile) {
+  throw new Error("Default profile not found");
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta http-equiv="refresh" content={`0; url=/${profile.slug}`} />
+    <title>Redirigiendo...</title>
+  </head>
+  <body>
+    <p>Redirigiendo a tu perfil...</p>
+  </body>
+</html>
