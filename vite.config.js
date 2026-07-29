@@ -2,9 +2,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   server: {
-    allowedHosts: ['.up.railway.app'],
+    allowedHosts: true,
   },
   preview: {
-    allowedHosts: ['.up.railway.app'],
+    allowedHosts: true,
   },
 });
