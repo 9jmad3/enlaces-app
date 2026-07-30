@@ -62,7 +62,7 @@ export async function sendEmail({ to, subject, html, text, idempotencyKey }) {
 }
 
 function idempotencyKey(kind, token) {
-  return `nexo-${kind}-${createHash('sha256').update(token).digest('hex').slice(0, 32)}`;
+  return `trazli-${kind}-${createHash('sha256').update(token).digest('hex').slice(0, 32)}`;
 }
 
 export function sendVerificationEmail({ email, displayName, token, isEmailChange = false }) {
@@ -71,7 +71,7 @@ export function sendVerificationEmail({ email, displayName, token, isEmailChange
   const heading = isEmailChange ? 'Confirma tu nuevo correo.' : 'Confirma que eres tú.';
   return sendEmail({
     to: email,
-    subject: isEmailChange ? 'Confirma tu nuevo correo en Nexo' : 'Verifica tu correo en Nexo',
+    subject: isEmailChange ? 'Confirma tu nuevo correo en Trazli' : 'Verifica tu correo en Trazli',
     html: emailLayout({
       preheading: 'Seguridad de tu cuenta',
       heading,
@@ -89,7 +89,7 @@ export function sendPasswordResetEmail({ email, displayName, token }) {
   const safeName = escapeHtml(displayName || 'tu espacio');
   return sendEmail({
     to: email,
-    subject: 'Restablece tu contraseña de Nexo',
+    subject: 'Restablece tu contraseña de Trazli',
     html: emailLayout({
       preheading: 'Recuperación de cuenta',
       heading: 'Crea una nueva contraseña.',
@@ -97,7 +97,7 @@ export function sendPasswordResetEmail({ email, displayName, token }) {
       buttonLabel: 'Cambiar contraseña',
       buttonUrl: url,
     }),
-    text: `Restablece tu contraseña de Nexo en ${url}\n\nEl enlace caduca en 30 minutos. Si no lo has solicitado, ignora el mensaje.`,
+    text: `Restablece tu contraseña de Trazli en ${url}\n\nEl enlace caduca en 30 minutos. Si no lo has solicitado, ignora el mensaje.`,
     idempotencyKey: idempotencyKey('reset', token),
   });
 }

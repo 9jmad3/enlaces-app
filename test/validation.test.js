@@ -14,11 +14,13 @@ test('reserves application routes and protected identities', () => {
     'restablecer-contrasena',
     'admin',
     'nexo',
+    'trazli',
+    'trazliapp',
     'paypal',
   ]) {
     assert.equal(
       validateSlug(slug),
-      'Ese nombre está reservado por Nexo.',
+      'Ese nombre está reservado por Trazli.',
       `${slug} should be reserved`,
     );
   }
@@ -26,7 +28,7 @@ test('reserves application routes and protected identities', () => {
 
 test('reserves every configured slug after normalization', () => {
   for (const slug of RESERVED_SLUGS) {
-    assert.equal(validateSlug(normalizeSlug(slug)), 'Ese nombre está reservado por Nexo.');
+    assert.equal(validateSlug(normalizeSlug(slug)), 'Ese nombre está reservado por Trazli.');
   }
 });
 
@@ -38,5 +40,5 @@ test('keeps ordinary profile names available', () => {
 
 test('normalizes case and accents before validation', () => {
   assert.equal(normalizeSlug('  Configuración  '), 'configuracion');
-  assert.equal(validateSlug(normalizeSlug('  Configuración  ')), 'Ese nombre está reservado por Nexo.');
+  assert.equal(validateSlug(normalizeSlug('  Configuración  ')), 'Ese nombre está reservado por Trazli.');
 });

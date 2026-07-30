@@ -24,9 +24,9 @@ const passwordReset = Astro.url.searchParams.get('passwordReset');
 const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:${profile.accent_color};--preview-text:${profile.text_color}`;
 ---
 
-<Layout title="Mi panel | Nexo" description="Configura y publica tu página de Nexo." bodyClass="dashboard-body">
+<Layout title="Mi panel | Trazli" description="Configura y publica tu página de Trazli." bodyClass="dashboard-body">
   <header class="app-header">
-    <a class="brand" href="/"><span>N</span>Nexo</a>
+    <a class="brand" href="/"><span>T</span>Trazli</a>
     <div class="app-header__actions">
       <a class="view-profile-link" href={`/${profile.slug}`} target="_blank">Ver mi página ↗</a>
       <a href="/app/cuenta">Cuenta</a>
@@ -218,7 +218,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
       </section>
 
       <div class="save-bar">
-        <span>nexo.app/<b data-current-slug>{profile.slug}</b></span>
+        <span>{Astro.url.host}/<b data-current-slug>{profile.slug}</b></span>
         <button class="button button--coral" type="submit">Guardar cambios</button>
       </div>
     </form>
@@ -246,7 +246,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
               <span><small>{String(index + 1).padStart(2, '0')}</small><b>{link.title}</b><i>↗</i></span>
             ))}
           </div>
-          <p class="preview-brand">N · hecho con Nexo</p>
+          <p class="preview-brand">T · hecho con Trazli</p>
         </div>
       </div>
       <p class="preview-note">Así se verá principalmente en móvil.</p>

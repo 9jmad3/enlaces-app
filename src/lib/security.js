@@ -3,7 +3,7 @@ import { hasDatabase, query } from './db.js';
 
 const fallbackAttempts = new Map();
 const rateLimitSecret = process.env.RATE_LIMIT_SECRET
-  || 'nexo-development-rate-limit-secret';
+  || 'trazli-development-rate-limit-secret';
 
 export function sameOrigin(request) {
   const origin = request.headers.get('origin');

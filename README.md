@@ -1,4 +1,4 @@
-# Nexo
+# Trazli
 
 Aplicacion gratuita para crear una pagina personal de enlaces. Cada usuario
 puede registrarse, elegir una plantilla, personalizar los colores y publicar su
@@ -50,7 +50,7 @@ de contraseña se activan al configurar estas variables:
 
 - `RESEND_API_KEY`: clave privada de Resend.
 - `EMAIL_FROM`: remitente de un dominio verificado, por ejemplo
-  `Nexo <cuenta@tudominio.es>`.
+  `Trazli <cuenta@tudominio.es>`.
 - `SITE_URL`: dominio público completo usado en los enlaces de los correos.
 
 Sin estas variables, el registro sigue funcionando y las cuentas nuevas se

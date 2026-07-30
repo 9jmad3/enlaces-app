@@ -51,6 +51,9 @@ export const RESERVED_SLUGS = new Set([
   'nexo',
   'nexoapp',
   'nexo-oficial',
+  'trazli',
+  'trazliapp',
+  'trazli-oficial',
   'admin',
   'administrator',
   'administrador',
@@ -120,7 +123,7 @@ export function validateSlug(slug) {
   }
 
   if (RESERVED_SLUGS.has(slug)) {
-    return 'Ese nombre está reservado por Nexo.';
+    return 'Ese nombre está reservado por Trazli.';
   }
 
   return '';

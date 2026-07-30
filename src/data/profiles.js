@@ -20,8 +20,8 @@
     ],
     contactHref: '/registro',
     contactLabel: 'Crea el tuyo',
-    siteTitle: 'Ejemplo | Nexo',
-    siteDescription: 'Ejemplo de una página personal creada con Nexo.',
+    siteTitle: 'Ejemplo | Trazli',
+    siteDescription: 'Ejemplo de una página personal creada con Trazli.',
   },
 ];
 
