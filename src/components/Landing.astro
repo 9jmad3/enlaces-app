@@ -29,9 +29,9 @@ const primaryHref = user ? '/app' : '/registro';
       <span class="shape shape--yellow"></span>
       <div class="phone">
         <div class="phone__top"><span></span></div>
-        <div class="phone__avatar" aria-hidden="true">E</div>
-        <p class="phone__name">Ejemplo</p>
-        <p class="phone__tagline">Todo lo tuyo, en un solo lugar.</p>
+        <img src="/img/jose-profile.jpeg" alt="José" />
+        <p class="phone__name">José</p>
+        <p class="phone__tagline">Vida, código y movimiento.</p>
         <div class="phone__links">
           <span>Instagram <b>↗</b></span>
           <span>Mi blog <b>↗</b></span>
@@ -192,21 +192,16 @@ const primaryHref = user ? '/app' : '/registro';
   }
   .phone__top { position: relative; z-index: 1; display: flex; justify-content: center; height: 1.6rem; }
   .phone__top span { width: 4.5rem; height: 0.4rem; border-radius: 99px; background: var(--ink); }
-  .phone__avatar {
+  .phone img {
     position: relative;
-    display: grid;
     width: 7.2rem;
     height: 7.2rem;
     margin: 1rem auto;
-    place-items: center;
     border: 4px solid white;
     border-radius: 1.8rem;
-    background: var(--yellow);
+    object-fit: cover;
+    object-position: center top;
     box-shadow: 0 12px 30px rgba(23, 32, 29, 0.18);
-    color: var(--ink);
-    font-family: var(--font-display);
-    font-size: 3.5rem;
-    font-weight: 650;
   }
   .phone__name {
     position: relative;
