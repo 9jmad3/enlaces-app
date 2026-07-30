@@ -68,6 +68,20 @@ export async function getEditableProfile(userId) {
   return { ...profile, links: links.rows };
 }
 
+export async function isSlugAvailable(slug, excludeUserId = '') {
+  const result = excludeUserId
+    ? await query(
+        'SELECT 1 FROM profiles WHERE slug = $1 AND user_id <> $2 LIMIT 1',
+        [slug, excludeUserId],
+      )
+    : await query(
+        'SELECT 1 FROM profiles WHERE slug = $1 LIMIT 1',
+        [slug],
+      );
+
+  return result.rowCount === 0;
+}
+
 export async function saveProfile(userId, data) {
   return transaction(async (client) => {
     const profileResult = await client.query(

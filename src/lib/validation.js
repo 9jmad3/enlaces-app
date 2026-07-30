@@ -49,7 +49,9 @@ export function safeUrl(value, { allowRelative = false } = {}) {
   if (allowRelative && raw.startsWith('/')) return raw;
 
   try {
-    const url = new URL(raw);
+    // People usually paste domains without a protocol in link-in-bio editors.
+    const candidate = /^[a-z][a-z\d+.-]*:/i.test(raw) ? raw : `https://${raw}`;
+    const url = new URL(candidate);
     return ['http:', 'https:'].includes(url.protocol) ? url.toString() : '';
   } catch {
     return '';

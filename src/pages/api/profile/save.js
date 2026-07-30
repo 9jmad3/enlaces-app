@@ -1,5 +1,5 @@
-import { saveProfile } from '../../../lib/profiles.js';
-import { normalizeSlug, validateSlug } from '../../../lib/validation.js';
+import { isSlugAvailable, saveProfile } from '../../../lib/profiles.js';
+import { normalizeSlug, safeUrl, validateSlug } from '../../../lib/validation.js';
 import { sameOrigin } from '../../../lib/security.js';
 
 export const prerender = false;
@@ -29,13 +29,33 @@ export async function POST({ request, locals, redirect }) {
     return redirect(panelError('Revisa la longitud de la descripcion y la biografia.'));
   }
 
-  const links = Array.from({ length: 6 }, (_, index) => ({
-    title: String(form.get(`linkTitle${index}`) || ''),
-    url: String(form.get(`linkUrl${index}`) || ''),
-    enabled: form.get(`linkEnabled${index}`) === 'on',
-  }));
+  const links = [];
+  for (let index = 0; index < 6; index += 1) {
+    const title = String(form.get(`linkTitle${index}`) || '').trim();
+    const rawUrl = String(form.get(`linkUrl${index}`) || '').trim();
+
+    if (!title && !rawUrl) continue;
+    if (!title || !rawUrl) {
+      return redirect(panelError(`Completa el titulo y la URL del enlace ${index + 1}.`));
+    }
+
+    const url = safeUrl(rawUrl);
+    if (!url) {
+      return redirect(panelError(`La URL del enlace ${index + 1} no es valida.`));
+    }
+
+    links.push({
+      title,
+      url,
+      enabled: form.get(`linkEnabled${index}`) === 'on',
+    });
+  }
 
   try {
+    if (!(await isSlugAvailable(slug, locals.user.id))) {
+      return redirect(panelError('Ese nombre de usuario ya esta ocupado.'));
+    }
+
     await saveProfile(locals.user.id, {
       slug,
       displayName,

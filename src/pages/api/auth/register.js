@@ -4,6 +4,7 @@ import {
   setSessionCookie,
 } from '../../../lib/auth.js';
 import { hasDatabase } from '../../../lib/db.js';
+import { isSlugAvailable } from '../../../lib/profiles.js';
 import {
   normalizeEmail,
   normalizeSlug,
@@ -52,6 +53,10 @@ export async function POST({ request, cookies, redirect }) {
   if (slugError) return redirect(redirectWithError(slugError));
 
   try {
+    if (!(await isSlugAvailable(slug))) {
+      return redirect(redirectWithError('Ese usuario ya esta en uso.'));
+    }
+
     const account = await createAccount({ email, password, slug, displayName });
     const session = await createSession(account.userId);
     setSessionCookie(cookies, session);

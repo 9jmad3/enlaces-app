@@ -137,8 +137,10 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
                 <input
                   name={`linkUrl${index}`}
                   value={link.url}
-                  type="url"
-                  placeholder="https://..."
+                  type="text"
+                  inputmode="url"
+                  autocomplete="url"
+                  placeholder="instagram.com/tuusuario"
                   aria-label={`URL del enlace ${index + 1}`}
                   data-link-url={index}
                 />
