@@ -39,7 +39,7 @@
         icon: 'mingcute:coupon-line',
       },
     ],
-    contactHref: 'https://ig.me/m/jmaledom?text=Hola%2C%20quiero%20uno%20como%20el%20tuyo',
+    contactHref: 'https://instagram.com/jmaledom',
     contactLabel: 'Quiero el mío',
     siteTitle: 'José | Enlaces',
     siteDescription: 'Vida, código y movimiento. Enlaces y contacto de José.',
