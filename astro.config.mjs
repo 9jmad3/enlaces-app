@@ -6,12 +6,4 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   integrations: [],
   site: process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321',
-  server: {
-    allowedHosts: true,
-  },
-  vite: {
-    preview: {
-      allowedHosts: true,
-    },
-  },
 });
