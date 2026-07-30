@@ -1,14 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PublicProfile from '../components/PublicProfile.astro';
+import { DEFAULT_PAYPAL_URL } from '../const';
 import { getPublicProfile } from '../lib/profiles.js';
 
 export const prerender = false;
 
 const slug = Astro.params.slug?.toLowerCase() || '';
 const profile = await getPublicProfile(slug);
-const paypalUrl = import.meta.env.DONATIONS_ENABLED === 'true'
-  ? import.meta.env.PAYPAL_URL
+const paypalUrl = import.meta.env.DONATIONS_ENABLED !== 'false'
+  ? import.meta.env.PAYPAL_URL || DEFAULT_PAYPAL_URL
   : '';
 
 if (!profile) Astro.response.status = 404;

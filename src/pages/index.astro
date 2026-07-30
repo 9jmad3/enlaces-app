@@ -1,10 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Landing from '../components/Landing.astro';
+import { DEFAULT_PAYPAL_URL } from '../const';
 
 const user = Astro.locals.user;
-const paypalUrl = import.meta.env.DONATIONS_ENABLED === 'true'
-  ? import.meta.env.PAYPAL_URL
+const paypalUrl = import.meta.env.DONATIONS_ENABLED !== 'false'
+  ? import.meta.env.PAYPAL_URL || DEFAULT_PAYPAL_URL
   : '';
 ---
 

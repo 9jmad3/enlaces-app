@@ -36,8 +36,8 @@ funcionando. El registro y el panel requieren PostgreSQL.
 2. En el servicio web crea `DATABASE_URL` con el valor
    `${{Postgres.DATABASE_URL}}`.
 3. Anade `SITE_URL` con el dominio publico completo.
-4. Las donaciones permanecen desactivadas con `DONATIONS_ENABLED=false`. Antes de
-   activarlas, completa la información legal y configura `PAYPAL_URL`.
+4. `PAYPAL_URL` configura el enlace de aportaciones voluntarias. Puedes ocultarlo
+   en cualquier momento con `DONATIONS_ENABLED=false`.
 5. Si la conexion de PostgreSQL no usa SSL, configura `DATABASE_SSL=false`.
 6. Railway detectara `npm run build` y arrancara con `npm run start`.
 7. Puedes usar `/api/health` como healthcheck.
