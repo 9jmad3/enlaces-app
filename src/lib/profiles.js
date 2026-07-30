@@ -6,7 +6,7 @@ import { safeUrl, validHex } from './validation.js';
 function mapFallback(profile) {
   if (!profile) return null;
   return {
-    id: 'fallback-jmaledom',
+    id: `fallback-${profile.slug}`,
     slug: profile.slug,
     display_name: profile.name,
     tagline: profile.description,
