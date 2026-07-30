@@ -1,11 +1,11 @@
 import pg from 'pg';
 
-const connectionString = import.meta.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL;
 
 const pool = connectionString
   ? new pg.Pool({
       connectionString,
-      ssl: import.meta.env.DATABASE_SSL === 'false'
+      ssl: process.env.DATABASE_SSL === 'false'
         ? false
         : { rejectUnauthorized: false },
       max: 10,
