@@ -113,17 +113,18 @@ const primaryHref = user ? '/app' : '/registro';
   </div>
 </section>
 
-<footer>
+<footer id="site-footer">
   <div class="shell footer__inner">
     <a class="footer-brand" href="/">Nexo<span>.</span></a>
     <p>Hecho con intención por José.</p>
     <div>
       {paypalUrl && (
-        <a href={paypalUrl} target="_blank" rel="noopener noreferrer">
+        <a class="support-link" href={paypalUrl} target="_blank" rel="noopener noreferrer">
+          <span aria-hidden="true">☕</span>
           Invítame a un café
         </a>
       )}
-      <a href="https://instagram.com/jmaledom" target="_blank" rel="noopener noreferrer">Contacto</a>
+      <a class="contact-link" href="https://instagram.com/jmaledom" target="_blank" rel="noopener noreferrer">Contacto</a>
     </div>
   </div>
   <div class="shell footer__legal">
@@ -366,7 +367,25 @@ const primaryHref = user ? '/app' : '/registro';
   .footer__inner { justify-content: space-between; }
   .footer__inner p { color: #aeb8b4; font-size: 0.8rem; }
   .footer__inner div { gap: 1.2rem; }
-  .footer__inner div a { font-size: 0.8rem; text-underline-offset: 0.25rem; }
+  .footer__inner div a { font-size: 0.8rem; }
+  .footer__inner .support-link {
+    display: inline-flex;
+    min-height: 2.75rem;
+    padding: 0.65rem 1rem;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    background: var(--yellow);
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 850;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+    transition: transform 180ms ease, background 180ms ease;
+  }
+  .footer__inner .support-link:hover { background: #ffdc73; transform: translateY(-2px) rotate(-1deg); }
+  .support-link span { font-size: 1rem; }
+  .contact-link { color: #c9d1ce; text-underline-offset: 0.25rem; }
+  .contact-link:hover { color: white; }
   .footer-brand { text-decoration: none; font-size: 1.2rem; font-weight: 850; }
   .footer-brand span { color: var(--coral); }
   .footer__legal {
@@ -401,6 +420,7 @@ const primaryHref = user ? '/app' : '/registro';
     footer { padding-top: 1.8rem; }
     .footer__inner { gap: 1rem; align-items: flex-start; flex-direction: column; }
     .footer__inner p { margin: 0; }
+    .footer__inner div { width: 100%; justify-content: space-between; }
     .footer__legal { margin-top: 1.25rem; }
   }
 </style>
