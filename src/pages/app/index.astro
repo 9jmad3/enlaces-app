@@ -31,7 +31,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
   </header>
 
   <main class="dashboard">
-    <form class="editor" action="/api/profile/save" method="post">
+    <form class="editor" action="/api/profile/save" method="post" enctype="multipart/form-data">
       <div class="editor__heading">
         <p class="eyebrow">Tu página</p>
         <h1>Hazla tuya.</h1>
@@ -58,6 +58,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
               <span>/</span>
               <input id="slug" name="slug" maxlength="30" value={profile.slug} data-preview="slug" required />
             </div>
+            <small class="field__hint" data-slug-status></small>
           </div>
         </div>
         <div class="field">
@@ -70,16 +71,21 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
           <small class="field__hint">Máximo 280 caracteres.</small>
         </div>
         <div class="field">
-          <label for="avatarUrl">Foto</label>
+          <label for="avatar">Foto</label>
           <input
-            id="avatarUrl"
-            name="avatarUrl"
-            type="url"
-            value={profile.avatar_url}
-            data-preview="avatar"
-            placeholder="https://..."
+            id="avatar"
+            name="avatar"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            data-avatar-input
           />
-          <small class="field__hint">Pega la URL pública de tu foto. La subida directa llegará en la siguiente fase.</small>
+          <small class="field__hint">JPG, PNG o WebP. Máximo 3 MB.</small>
+          {profile.avatar_url && (
+            <label class="remove-avatar">
+              <input name="removeAvatar" type="checkbox" data-remove-avatar />
+              Quitar la foto actual
+            </label>
+          )}
         </div>
       </section>
 
@@ -123,8 +129,9 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
         </div>
         <div class="links-editor">
           {links.map((link, index) => (
-            <article class="link-row">
-              <span class="drag" aria-hidden="true">··</span>
+            <article class="link-row" data-link-row={index}>
+              <button class="drag" type="button" draggable="true" aria-label={`Arrastrar enlace ${index + 1}`} title="Arrastrar para reordenar">··</button>
+              <input type="hidden" name={`linkPosition${index}`} value={index} data-link-position />
               <div class="link-fields">
                 <input
                   name={`linkTitle${index}`}
@@ -149,6 +156,10 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
                 <input name={`linkEnabled${index}`} type="checkbox" checked={link.enabled} data-link-enabled={index} />
                 <span></span>
               </label>
+              <div class="order-actions">
+                <button type="button" data-move="up" aria-label={`Subir enlace ${index + 1}`}>↑</button>
+                <button type="button" data-move="down" aria-label={`Bajar enlace ${index + 1}`}>↓</button>
+              </div>
             </article>
           ))}
         </div>
@@ -224,22 +235,83 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
         setText('[data-preview-tagline]', value);
       } else if (key === 'bio') {
         setText('[data-preview-bio]', value);
-      } else if (key === 'avatar') {
-        const avatar = document.querySelector('.preview-avatar');
-        if (!avatar) return;
-        const image = avatar.querySelector<HTMLImageElement>('img');
-        if (value) {
-          if (image) image.src = value;
-          else {
-            const newImage = document.createElement('img');
-            newImage.src = value;
-            newImage.alt = '';
-            newImage.dataset.previewAvatar = '';
-            avatar.replaceChildren(newImage);
-          }
-        }
       }
     });
+  });
+
+  const slugInput = document.querySelector<HTMLInputElement>('#slug');
+  const slugStatus = document.querySelector<HTMLElement>('[data-slug-status]');
+  let slugTimer = 0;
+  let slugRequest: AbortController | null = null;
+
+  slugInput?.addEventListener('input', () => {
+    window.clearTimeout(slugTimer);
+    slugRequest?.abort();
+    if (slugInput.value.trim().length < 3) {
+      if (slugStatus) slugStatus.textContent = 'Usa al menos 3 caracteres.';
+      return;
+    }
+
+    if (slugStatus) {
+      slugStatus.textContent = 'Comprobando...';
+      slugStatus.dataset.state = '';
+    }
+    slugTimer = window.setTimeout(async () => {
+      slugRequest = new AbortController();
+      try {
+        const response = await fetch(`/api/slug/check?slug=${encodeURIComponent(slugInput.value)}`, {
+          signal: slugRequest.signal,
+        });
+        const result = await response.json();
+        if (slugStatus) {
+          slugStatus.textContent = result.message;
+          slugStatus.dataset.state = result.available ? 'available' : 'unavailable';
+        }
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError' && slugStatus) {
+          slugStatus.textContent = 'No se puede comprobar ahora mismo.';
+        }
+      }
+    }, 350);
+  });
+
+  const avatarInput = document.querySelector<HTMLInputElement>('[data-avatar-input]');
+  const removeAvatar = document.querySelector<HTMLInputElement>('[data-remove-avatar]');
+  let avatarObjectUrl = '';
+
+  const showAvatarPreview = (src = '') => {
+    const avatar = document.querySelector('.preview-avatar');
+    if (!avatar) return;
+    if (!src) {
+      const initial = document.querySelector<HTMLElement>('[data-preview-name]')
+        ?.textContent?.trim()?.[0]?.toUpperCase() || 'N';
+      const fallback = document.createElement('b');
+      fallback.dataset.previewInitials = '';
+      fallback.textContent = initial;
+      avatar.replaceChildren(fallback);
+      return;
+    }
+    const image = document.createElement('img');
+    image.src = src;
+    image.alt = '';
+    image.dataset.previewAvatar = '';
+    avatar.replaceChildren(image);
+  };
+
+  avatarInput?.addEventListener('change', () => {
+    if (avatarObjectUrl) URL.revokeObjectURL(avatarObjectUrl);
+    const file = avatarInput.files?.[0];
+    if (!file) return;
+    avatarObjectUrl = URL.createObjectURL(file);
+    if (removeAvatar) removeAvatar.checked = false;
+    showAvatarPreview(avatarObjectUrl);
+  });
+
+  removeAvatar?.addEventListener('change', () => {
+    if (removeAvatar.checked) {
+      if (avatarInput) avatarInput.value = '';
+      showAvatarPreview();
+    }
   });
 
   document.querySelectorAll<HTMLInputElement>('[data-color]').forEach((input) => {
@@ -264,7 +336,9 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
     const target = document.querySelector('[data-preview-links]');
     if (!target) return;
     target.innerHTML = '';
-    for (let index = 0; index < 6; index += 1) {
+    const rows = document.querySelectorAll<HTMLElement>('[data-link-row]');
+    for (const row of rows) {
+      const index = row.dataset.linkRow;
       const title = getField(`[data-link-title="${index}"]`)?.value.trim();
       const url = getField(`[data-link-url="${index}"]`)?.value.trim();
       const enabled = getField(`[data-link-enabled="${index}"]`)?.checked;
@@ -280,6 +354,51 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
 
   document.querySelectorAll<HTMLInputElement>('[data-link-title], [data-link-url], [data-link-enabled]')
     .forEach((input) => input.addEventListener('input', updateLinks));
+
+  const linksEditor = document.querySelector<HTMLElement>('.links-editor');
+  let draggedRow: HTMLElement | null = null;
+
+  const syncLinkOrder = () => {
+    linksEditor?.querySelectorAll<HTMLElement>('[data-link-row]').forEach((row, position) => {
+      const field = row.querySelector<HTMLInputElement>('[data-link-position]');
+      if (field) field.value = String(position);
+    });
+    updateLinks();
+  };
+
+  linksEditor?.querySelectorAll<HTMLElement>('[data-link-row]').forEach((row) => {
+    row.addEventListener('dragstart', (event) => {
+      draggedRow = row;
+      event.dataTransfer?.setData('text/plain', row.dataset.linkRow || '');
+      if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+      row.classList.add('link-row--dragging');
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('link-row--dragging');
+      draggedRow = null;
+      syncLinkOrder();
+    });
+    row.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      if (!draggedRow || draggedRow === row || !linksEditor) return;
+      const bounds = row.getBoundingClientRect();
+      const insertAfter = event.clientY > bounds.top + bounds.height / 2;
+      linksEditor.insertBefore(draggedRow, insertAfter ? row.nextSibling : row);
+    });
+  });
+
+  linksEditor?.querySelectorAll<HTMLButtonElement>('[data-move]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const row = button.closest<HTMLElement>('[data-link-row]');
+      if (!row || !linksEditor) return;
+      if (button.dataset.move === 'up' && row.previousElementSibling) {
+        linksEditor.insertBefore(row, row.previousElementSibling);
+      } else if (button.dataset.move === 'down' && row.nextElementSibling) {
+        linksEditor.insertBefore(row.nextElementSibling, row);
+      }
+      syncLinkOrder();
+    });
+  });
 </script>
 
 <style>
@@ -362,6 +481,9 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
   .slug-input { display: flex; align-items: center; overflow: hidden; border: 1px solid var(--line); border-radius: 0.85rem; background: white; }
   .slug-input span { padding-left: 0.8rem; color: var(--muted); }
   .slug-input input { border: 0; padding-left: 0.1rem; box-shadow: none; }
+  [data-slug-status][data-state='available'] { color: #17704a; }
+  [data-slug-status][data-state='unavailable'] { color: #b43824; }
+  .remove-avatar { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--muted); font-size: 0.75rem; }
   .template-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .template-option { cursor: pointer; }
   .template-option input { position: absolute; opacity: 0; pointer-events: none; }
@@ -387,8 +509,12 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
   .color-options span { font-size: 0.74rem; font-weight: 750; }
   .color-options input { width: 2.3rem; height: 2.3rem; padding: 0; border: 0; background: none; cursor: pointer; }
   .links-editor { display: grid; gap: 0.7rem; }
-  .link-row { display: grid; grid-template-columns: 1rem 1fr auto; align-items: center; gap: 0.65rem; }
-  .drag { color: #a4aaa7; font-weight: 900; letter-spacing: -0.15em; writing-mode: vertical-rl; }
+  .link-row { display: grid; grid-template-columns: 1.5rem 1fr auto auto; align-items: center; gap: 0.55rem; transition: opacity 140ms ease, transform 140ms ease; }
+  .link-row--dragging { opacity: 0.48; transform: scale(0.985); }
+  .drag { padding: 0; border: 0; background: transparent; color: #8d9692; font-weight: 900; letter-spacing: -0.15em; writing-mode: vertical-rl; cursor: grab; }
+  .drag:active { cursor: grabbing; }
+  .order-actions { display: grid; gap: 0.18rem; }
+  .order-actions button { display: grid; width: 1.65rem; height: 1.3rem; padding: 0; place-items: center; border: 1px solid var(--line); border-radius: 0.35rem; background: white; color: var(--muted); cursor: pointer; }
   .link-fields { display: grid; grid-template-columns: 0.75fr 1.25fr; overflow: hidden; border: 1px solid var(--line); border-radius: 0.8rem; background: white; }
   .link-fields input { min-width: 0; height: 2.8rem; padding: 0 0.75rem; border: 0; outline: 0; color: var(--ink); }
   .link-fields input + input { border-left: 1px solid var(--line); }
@@ -506,7 +632,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
   @media (max-width: 520px) {
     .app-header__actions a { display: none; }
     .fields-grid, .template-options { grid-template-columns: 1fr; }
-    .link-row { grid-template-columns: 0.7rem 1fr auto; }
+    .link-row { grid-template-columns: 1rem minmax(0, 1fr) auto auto; gap: 0.35rem; }
     .link-fields { grid-template-columns: 1fr; }
     .link-fields input + input { border-top: 1px solid var(--line); border-left: 0; }
     .save-bar > span { max-width: 42%; }

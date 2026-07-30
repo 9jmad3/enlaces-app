@@ -1,4 +1,5 @@
 import { isSlugAvailable, saveProfile } from '../../../lib/profiles.js';
+import { AvatarUploadError, parseAvatarUpload } from '../../../lib/avatar.js';
 import { normalizeSlug, safeUrl, validateSlug } from '../../../lib/validation.js';
 import { sameOrigin } from '../../../lib/security.js';
 
@@ -12,6 +13,11 @@ export async function POST({ request, locals, redirect }) {
   if (!locals.user) return redirect('/login');
   if (!sameOrigin(request)) {
     return new Response('Solicitud no permitida', { status: 403 });
+  }
+
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 4 * 1024 * 1024) {
+    return redirect(panelError('La foto no puede superar los 3 MB.'));
   }
 
   const form = await request.formData();
@@ -33,25 +39,32 @@ export async function POST({ request, locals, redirect }) {
   for (let index = 0; index < 6; index += 1) {
     const title = String(form.get(`linkTitle${index}`) || '').trim();
     const rawUrl = String(form.get(`linkUrl${index}`) || '').trim();
+    const submittedPosition = Number(form.get(`linkPosition${index}`));
+    const position = Number.isInteger(submittedPosition)
+      ? Math.min(5, Math.max(0, submittedPosition))
+      : index;
 
     if (!title && !rawUrl) continue;
     if (!title || !rawUrl) {
-      return redirect(panelError(`Completa el titulo y la URL del enlace ${index + 1}.`));
+      return redirect(panelError(`Completa el titulo y la URL del enlace ${position + 1}.`));
     }
 
     const url = safeUrl(rawUrl);
     if (!url) {
-      return redirect(panelError(`La URL del enlace ${index + 1} no es valida.`));
+      return redirect(panelError(`La URL del enlace ${position + 1} no es valida.`));
     }
 
     links.push({
       title,
       url,
       enabled: form.get(`linkEnabled${index}`) === 'on',
+      position,
     });
   }
+  links.sort((first, second) => first.position - second.position);
 
   try {
+    const avatar = await parseAvatarUpload(form.get('avatar'));
     if (!(await isSlugAvailable(slug, locals.user.id))) {
       return redirect(panelError('Ese nombre de usuario ya esta ocupado.'));
     }
@@ -61,7 +74,8 @@ export async function POST({ request, locals, redirect }) {
       displayName,
       tagline,
       bio,
-      avatarUrl: String(form.get('avatarUrl') || ''),
+      avatar,
+      removeAvatar: form.get('removeAvatar') === 'on',
       templateId: String(form.get('templateId') || 'studio'),
       backgroundColor: String(form.get('backgroundColor') || ''),
       accentColor: String(form.get('accentColor') || ''),
@@ -71,6 +85,9 @@ export async function POST({ request, locals, redirect }) {
     });
     return redirect('/app?saved=1');
   } catch (error) {
+    if (error instanceof AvatarUploadError) {
+      return redirect(panelError(error.message));
+    }
     if (error?.code === '23505') {
       return redirect(panelError('Ese nombre de usuario ya esta ocupado.'));
     }

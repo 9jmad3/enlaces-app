@@ -35,7 +35,7 @@ const error = Astro.url.searchParams.get('error');
             required
           />
         </div>
-        <small class="field__hint">Será el enlace que compartirás.</small>
+        <small class="field__hint" data-slug-status>Será el enlace que compartirás.</small>
       </div>
       <div class="field">
         <label for="email">Correo electrónico</label>
@@ -58,3 +58,47 @@ const error = Astro.url.searchParams.get('error');
     </form>
   </AuthShell>
 </Layout>
+
+<script>
+  const slugInput = document.querySelector<HTMLInputElement>('#slug');
+  const slugStatus = document.querySelector<HTMLElement>('[data-slug-status]');
+  let slugTimer = 0;
+  let slugRequest: AbortController | null = null;
+
+  const setSlugStatus = (message: string, state = '') => {
+    if (!slugStatus) return;
+    slugStatus.textContent = message;
+    slugStatus.dataset.state = state;
+  };
+
+  slugInput?.addEventListener('input', () => {
+    window.clearTimeout(slugTimer);
+    slugRequest?.abort();
+    const slug = slugInput.value.trim();
+    if (slug.length < 3) {
+      setSlugStatus('Usa al menos 3 caracteres.');
+      return;
+    }
+
+    setSlugStatus('Comprobando...');
+    slugTimer = window.setTimeout(async () => {
+      slugRequest = new AbortController();
+      try {
+        const response = await fetch(`/api/slug/check?slug=${encodeURIComponent(slug)}`, {
+          signal: slugRequest.signal,
+        });
+        const result = await response.json();
+        setSlugStatus(result.message, result.available ? 'available' : 'unavailable');
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setSlugStatus('No se puede comprobar ahora mismo.');
+        }
+      }
+    }, 350);
+  });
+</script>
+
+<style>
+  [data-slug-status][data-state='available'] { color: #17704a; }
+  [data-slug-status][data-state='unavailable'] { color: #b43824; }
+</style>

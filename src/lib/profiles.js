@@ -99,11 +99,31 @@ export async function isSlugAvailable(slug, excludeUserId = '') {
 export async function saveProfile(userId, data) {
   return transaction(async (client) => {
     const profileResult = await client.query(
-      'SELECT id FROM profiles WHERE user_id = $1 FOR UPDATE',
+      'SELECT id, avatar_url FROM profiles WHERE user_id = $1 FOR UPDATE',
       [userId],
     );
-    const profileId = profileResult.rows[0]?.id;
+    const currentProfile = profileResult.rows[0];
+    const profileId = currentProfile?.id;
     if (!profileId) throw new Error('Perfil no encontrado');
+
+    let avatarUrl = currentProfile.avatar_url;
+    if (data.removeAvatar) {
+      await client.query('DELETE FROM profile_avatars WHERE profile_id = $1', [profileId]);
+      avatarUrl = '';
+    } else if (data.avatar) {
+      await client.query(
+        `INSERT INTO profile_avatars
+          (profile_id, content_type, content, etag, updated_at)
+         VALUES ($1, $2, $3, $4, NOW())
+         ON CONFLICT (profile_id) DO UPDATE SET
+           content_type = EXCLUDED.content_type,
+           content = EXCLUDED.content,
+           etag = EXCLUDED.etag,
+           updated_at = NOW()`,
+        [profileId, data.avatar.contentType, data.avatar.content, data.avatar.etag],
+      );
+      avatarUrl = `/api/avatar/${profileId}?v=${data.avatar.etag.slice(0, 12)}`;
+    }
 
     await client.query(
       `UPDATE profiles SET
@@ -124,7 +144,7 @@ export async function saveProfile(userId, data) {
         data.displayName.slice(0, 60),
         data.tagline.slice(0, 100),
         data.bio.slice(0, 280),
-        safeUrl(data.avatarUrl, { allowRelative: true }),
+        safeUrl(avatarUrl, { allowRelative: true }),
         ['studio', 'pulse'].includes(data.templateId) ? data.templateId : 'studio',
         validHex(data.backgroundColor, '#F3EFE7'),
         validHex(data.accentColor, '#E65336'),
