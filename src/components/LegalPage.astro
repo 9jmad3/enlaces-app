@@ -1,0 +1,74 @@
+---
+import SiteHeader from './SiteHeader.astro';
+import LegalFooter from './LegalFooter.astro';
+
+const { title, summary, updated = '30 de julio de 2026' } = Astro.props;
+---
+
+<SiteHeader user={Astro.locals.user} />
+<main class="legal shell">
+  <header>
+    <p class="eyebrow">Información legal</p>
+    <h1>{title}</h1>
+    <p>{summary}</p>
+    <small>Última actualización: {updated}</small>
+  </header>
+  <article>
+    <slot />
+  </article>
+</main>
+<LegalFooter />
+
+<style>
+  .legal { padding-block: clamp(3rem, 8vw, 6.5rem); }
+  header { max-width: 780px; margin-bottom: 3.5rem; }
+  h1 {
+    margin: 1rem 0;
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 8vw, 6.4rem);
+    font-weight: 620;
+    letter-spacing: -0.06em;
+    line-height: 0.9;
+  }
+  header > p:last-of-type {
+    max-width: 680px;
+    color: var(--muted);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    line-height: 1.65;
+  }
+  header small { color: #828b87; font-size: 0.72rem; }
+  article {
+    width: min(100%, 780px);
+    padding: clamp(1.2rem, 4vw, 2.6rem);
+    border: 1px solid var(--line);
+    border-radius: 1.35rem;
+    background: var(--surface);
+    box-shadow: 0 18px 55px rgba(36, 43, 40, 0.055);
+  }
+  article :global(section + section) {
+    margin-top: 2.2rem;
+    padding-top: 2.2rem;
+    border-top: 1px solid var(--line);
+  }
+  article :global(h2) {
+    margin: 0 0 0.8rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.55rem, 4vw, 2rem);
+    font-weight: 650;
+    letter-spacing: -0.035em;
+  }
+  article :global(h3) { margin: 1.4rem 0 0.55rem; font-size: 0.95rem; }
+  article :global(p), article :global(li) {
+    color: #515c58;
+    font-size: 0.9rem;
+    line-height: 1.75;
+  }
+  article :global(ul) { padding-left: 1.2rem; }
+  article :global(a) { color: var(--coral-dark); font-weight: 700; text-underline-offset: 0.2rem; }
+  article :global(.legal-note) {
+    padding: 1rem;
+    border-left: 3px solid var(--coral);
+    border-radius: 0 0.8rem 0.8rem 0;
+    background: #fff3ef;
+  }
+</style>

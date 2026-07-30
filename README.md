@@ -36,7 +36,8 @@ funcionando. El registro y el panel requieren PostgreSQL.
 2. En el servicio web crea `DATABASE_URL` con el valor
    `${{Postgres.DATABASE_URL}}`.
 3. Anade `SITE_URL` con el dominio publico completo.
-4. Anade `PAYPAL_URL` si quieres mostrar el enlace para apoyar el proyecto.
+4. Las donaciones permanecen desactivadas con `DONATIONS_ENABLED=false`. Antes de
+   activarlas, completa la información legal y configura `PAYPAL_URL`.
 5. Si la conexion de PostgreSQL no usa SSL, configura `DATABASE_SSL=false`.
 6. Railway detectara `npm run build` y arrancara con `npm run start`.
 7. Puedes usar `/api/health` como healthcheck.
@@ -46,8 +47,8 @@ No se usa `astro preview` en produccion y no hace falta configurar
 
 ## Datos
 
-Las migraciones estan en `database/`. La primera crea usuarios, perfiles,
-enlaces configurables y sesiones.
+Las migraciones estan en `database/`. Crean usuarios, perfiles, enlaces,
+sesiones, límites de seguridad y el registro de aceptación de las condiciones.
 
 El perfil historico de Jose se mantiene como respaldo en `/jmaledom`. Cuando se
 registre una cuenta con ese usuario, el perfil guardado en PostgreSQL tendra

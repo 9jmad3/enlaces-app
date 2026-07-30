@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import LegalFooter from '../../components/LegalFooter.astro';
 import { getEditableProfile } from '../../lib/profiles.js';
 
 export const prerender = false;
@@ -226,6 +227,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
       <p class="preview-note">Así se verá principalmente en móvil.</p>
     </aside>
   </main>
+  <LegalFooter />
 </Layout>
 
 <script>

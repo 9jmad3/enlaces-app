@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { query, transaction } from './db.js';
 
 export const SESSION_COOKIE = 'enlaces_session';
+export const TERMS_VERSION = '2026-07-30';
 const SESSION_DAYS = 30;
 
 function hashToken(token) {
@@ -16,8 +17,10 @@ export async function createAccount({ email, password, slug, displayName }) {
 
   await transaction(async (client) => {
     await client.query(
-      'INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)',
-      [userId, email, passwordHash],
+      `INSERT INTO users
+        (id, email, password_hash, terms_accepted_at, terms_version)
+       VALUES ($1, $2, $3, NOW(), $4)`,
+      [userId, email, passwordHash, TERMS_VERSION],
     );
     await client.query(
       `INSERT INTO profiles

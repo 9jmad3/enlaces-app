@@ -1,0 +1,51 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LegalPage from '../components/LegalPage.astro';
+---
+
+<Layout title="Aviso legal | Nexo" description="Información legal y datos de contacto de Nexo.">
+  <LegalPage
+    title="Aviso legal"
+    summary="Información sobre la persona responsable, el funcionamiento y el alcance de este proyecto."
+  >
+    <section>
+      <h2>Responsable y contacto</h2>
+      <p>
+        Nexo es un proyecto personal gestionado por José desde España. Para cualquier consulta,
+        incidencia o solicitud relacionada con el servicio puedes escribir a
+        <a href="mailto:josemanuelalejandrod@gmail.com">josemanuelalejandrod@gmail.com</a>.
+      </p>
+      <p class="legal-note">
+        Actualmente Nexo se ofrece gratuitamente, no cobra a sus usuarios y no acepta donaciones.
+        Si esta situación cambia, este aviso se actualizará antes de activar cualquier forma de
+        financiación.
+      </p>
+    </section>
+
+    <section>
+      <h2>Finalidad del sitio</h2>
+      <p>
+        Nexo permite crear y publicar una página personal que reúne enlaces, una presentación,
+        una fotografía opcional y una apariencia elegida por cada usuario.
+      </p>
+    </section>
+
+    <section>
+      <h2>Propiedad intelectual</h2>
+      <p>
+        El diseño, el código y los contenidos propios de Nexo están protegidos por la normativa
+        aplicable. El nombre Nexo se utiliza para identificar este proyecto y no se presenta como
+        una marca registrada. Cada usuario conserva los derechos sobre los contenidos que publica.
+      </p>
+    </section>
+
+    <section>
+      <h2>Responsabilidad</h2>
+      <p>
+        Cada usuario es responsable de sus contenidos y de los sitios externos que enlaza. Nexo
+        puede retirar perfiles o enlaces ilícitos, engañosos, dañinos o contrarios a las
+        condiciones de uso. No se garantiza la disponibilidad ininterrumpida del servicio.
+      </p>
+    </section>
+  </LegalPage>
+</Layout>

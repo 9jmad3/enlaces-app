@@ -1,5 +1,6 @@
 ---
 import SiteHeader from './SiteHeader.astro';
+import LegalFooter from './LegalFooter.astro';
 
 const { user = null, paypalUrl = '' } = Astro.props;
 const primaryHref = user ? '/app' : '/registro';
@@ -125,6 +126,7 @@ const primaryHref = user ? '/app' : '/registro';
       <a href="https://instagram.com/jmaledom" target="_blank" rel="noopener noreferrer">Contacto</a>
     </div>
   </div>
+  <LegalFooter compact inverse />
 </footer>
 
 <style>

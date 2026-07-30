@@ -1,4 +1,6 @@
 ---
+import LegalFooter from './LegalFooter.astro';
+
 const {
   title,
   intro,
@@ -23,6 +25,7 @@ const {
         {alternateText} <a href={alternateHref}>{alternateLabel}</a>
       </p>
     </div>
+    <LegalFooter compact />
   </section>
 
   <aside class="auth__visual" aria-hidden="true">

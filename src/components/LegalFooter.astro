@@ -1,0 +1,39 @@
+---
+const { compact = false, inverse = false } = Astro.props;
+---
+
+<div class:list={['legal-footer', { 'legal-footer--compact': compact, 'legal-footer--inverse': inverse }]}>
+  <nav aria-label="Información legal">
+    <a href="/aviso-legal">Aviso legal</a>
+    <a href="/privacidad">Privacidad</a>
+    <a href="/condiciones">Condiciones</a>
+    <a href="/cookies">Cookies</a>
+  </nav>
+  <span>© {new Date().getFullYear()} Nexo</span>
+</div>
+
+<style>
+  .legal-footer {
+    display: flex;
+    width: min(1180px, calc(100% - 2rem));
+    margin: 0 auto;
+    padding: 1.4rem 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+  nav { display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; }
+  a { color: inherit; text-underline-offset: 0.2rem; }
+  a:hover { color: var(--ink); }
+  .legal-footer--compact {
+    width: 100%;
+    padding-block: 1rem 0;
+  }
+  .legal-footer--inverse { color: #aeb8b4; }
+  .legal-footer--inverse a:hover { color: var(--paper); }
+  @media (max-width: 560px) {
+    .legal-footer { align-items: flex-start; flex-direction: column; }
+  }
+</style>

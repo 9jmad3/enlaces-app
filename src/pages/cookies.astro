@@ -1,0 +1,42 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LegalPage from '../components/LegalPage.astro';
+---
+
+<Layout title="Cookies | Nexo" description="Información sobre las cookies utilizadas por Nexo.">
+  <LegalPage
+    title="Cookies"
+    summary="Nexo utiliza únicamente una cookie técnica necesaria para mantener abierta tu sesión."
+  >
+    <section>
+      <h2>Qué utilizamos</h2>
+      <p>
+        La cookie <strong>enlaces_session</strong> identifica de forma segura una sesión iniciada.
+        Es propia, técnica y necesaria para acceder al panel y guardar cambios en la cuenta.
+      </p>
+      <ul>
+        <li>Duración máxima: 30 días.</li>
+        <li>Acceso desde JavaScript: no, está protegida con HttpOnly.</li>
+        <li>Envío seguro: Secure en producción y SameSite=Lax.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Sin seguimiento publicitario</h2>
+      <p>
+        No utilizamos cookies de analítica, publicidad, personalización de terceros ni seguimiento
+        entre sitios. Por eso no mostramos un banner de consentimiento: la única cookie actual es
+        imprescindible para el servicio solicitado.
+      </p>
+    </section>
+
+    <section>
+      <h2>Cómo eliminarla</h2>
+      <p>
+        Puedes cerrar sesión para invalidarla o eliminarla desde la configuración de tu navegador.
+        Si bloqueas todas las cookies, podrás visitar páginas públicas, pero no podrás mantener una
+        sesión iniciada en el panel.
+      </p>
+    </section>
+  </LegalPage>
+</Layout>

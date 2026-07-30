@@ -54,6 +54,17 @@ const error = Astro.url.searchParams.get('error');
         />
         <small class="field__hint">Mínimo 8 caracteres.</small>
       </div>
+      <label class="legal-check">
+        <input name="isAdult" type="checkbox" value="yes" required />
+        <span>Confirmo que tengo al menos 18 años.</span>
+      </label>
+      <label class="legal-check">
+        <input name="acceptTerms" type="checkbox" value="yes" required />
+        <span>
+          Acepto las <a href="/condiciones" target="_blank">condiciones de uso</a> y he leído la
+          <a href="/privacidad" target="_blank">política de privacidad</a>.
+        </span>
+      </label>
       <button class="button button--coral" type="submit">Crear mi página gratis ↗</button>
     </form>
   </AuthShell>
@@ -101,4 +112,15 @@ const error = Astro.url.searchParams.get('error');
 <style>
   [data-slug-status][data-state='available'] { color: #17704a; }
   [data-slug-status][data-state='unavailable'] { color: #b43824; }
+  .legal-check {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr;
+    gap: 0.65rem;
+    align-items: start;
+    color: var(--muted);
+    font-size: 0.76rem;
+    line-height: 1.5;
+  }
+  .legal-check input { width: 1rem; height: 1rem; margin: 0.12rem 0 0; accent-color: var(--coral); }
+  .legal-check a { color: var(--ink); font-weight: 750; text-underline-offset: 0.18rem; }
 </style>

@@ -38,6 +38,12 @@ export async function POST({ request, cookies, redirect }) {
   const password = String(form.get('password') || '');
   const displayName = String(form.get('displayName') || '').trim();
   const slug = normalizeSlug(form.get('slug'));
+  const isAdult = form.get('isAdult') === 'yes';
+  const acceptsTerms = form.get('acceptTerms') === 'yes';
+
+  if (!isAdult || !acceptsTerms) {
+    return redirect(redirectWithError('Debes ser mayor de 18 años y aceptar las condiciones.'));
+  }
 
   if (!displayName || displayName.length > 60) {
     return redirect(redirectWithError('Escribe un nombre de hasta 60 caracteres.'));

@@ -3,7 +3,9 @@ import Layout from '../layouts/Layout.astro';
 import Landing from '../components/Landing.astro';
 
 const user = Astro.locals.user;
-const paypalUrl = import.meta.env.PAYPAL_URL;
+const paypalUrl = import.meta.env.DONATIONS_ENABLED === 'true'
+  ? import.meta.env.PAYPAL_URL
+  : '';
 ---
 
 <Layout
