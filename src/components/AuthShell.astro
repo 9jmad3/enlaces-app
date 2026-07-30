@@ -1,0 +1,212 @@
+---
+const {
+  title,
+  intro,
+  alternateText,
+  alternateHref,
+  alternateLabel,
+} = Astro.props;
+---
+
+<main class="auth">
+  <section class="auth__form">
+    <a class="brand" href="/">
+      <span>N</span>
+      Nexo
+    </a>
+    <div class="auth__content">
+      <p class="eyebrow">Tu espacio empieza aquí</p>
+      <h1>{title}</h1>
+      <p class="auth__intro">{intro}</p>
+      <slot />
+      <p class="auth__alternate">
+        {alternateText} <a href={alternateHref}>{alternateLabel}</a>
+      </p>
+    </div>
+  </section>
+
+  <aside class="auth__visual" aria-hidden="true">
+    <div class="visual-copy">
+      <span>✦</span>
+      <p>Una URL pequeña.<br /><em>Todo tu mundo dentro.</em></p>
+    </div>
+    <div class="mini-card mini-card--one">
+      <i></i>
+      <b>Tu nombre</b>
+      <span>Lo que haces, bien contado.</span>
+    </div>
+    <div class="mini-card mini-card--two">
+      <span>Instagram ↗</span>
+      <span>Mi proyecto ↗</span>
+      <span>Contacto ↗</span>
+    </div>
+  </aside>
+</main>
+
+<style>
+  .auth {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 0.82fr);
+    min-height: 100dvh;
+  }
+  .auth__form {
+    display: flex;
+    padding: 2rem clamp(1.2rem, 5vw, 5rem);
+    flex-direction: column;
+    background: var(--surface);
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    align-self: flex-start;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 850;
+  }
+  .brand span {
+    display: grid;
+    width: 2.3rem;
+    height: 2.3rem;
+    place-items: center;
+    border-radius: 0.7rem 0.7rem 0.7rem 0.2rem;
+    background: var(--ink);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+  }
+  .auth__content {
+    width: min(100%, 480px);
+    margin: auto;
+    padding-block: 3rem;
+  }
+  h1 {
+    margin: 1rem 0 0.7rem;
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 6vw, 4.7rem);
+    font-weight: 620;
+    letter-spacing: -0.055em;
+    line-height: 0.95;
+  }
+  .auth__intro {
+    margin: 0 0 2rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .auth__alternate {
+    margin-top: 1.5rem;
+    color: var(--muted);
+    text-align: center;
+    font-size: 0.86rem;
+  }
+  .auth__alternate a {
+    color: var(--ink);
+    font-weight: 800;
+    text-underline-offset: 0.22rem;
+  }
+  .auth__visual {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 20% 80%, var(--yellow) 0 16%, transparent 16.3%),
+      radial-gradient(circle at 88% 18%, var(--mint) 0 23%, transparent 23.3%),
+      var(--coral);
+  }
+  .auth__visual::before {
+    position: absolute;
+    inset: 0;
+    opacity: 0.12;
+    background-image: linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px);
+    background-size: 38px 38px;
+    content: '';
+  }
+  .visual-copy {
+    position: absolute;
+    top: 12%;
+    left: 10%;
+    color: white;
+  }
+  .visual-copy > span { color: var(--yellow); font-size: 2rem; }
+  .visual-copy p {
+    margin: 1rem 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 4.3vw, 4.5rem);
+    font-weight: 560;
+    letter-spacing: -0.05em;
+    line-height: 0.95;
+  }
+  .visual-copy em { color: #ffdca0; font-weight: 420; }
+  .mini-card {
+    position: absolute;
+    display: flex;
+    width: 270px;
+    padding: 1.4rem;
+    flex-direction: column;
+    border: 5px solid var(--ink);
+    border-radius: 1.8rem;
+    box-shadow: 0 26px 55px rgba(89, 29, 17, 0.25);
+  }
+  .mini-card--one {
+    right: 12%;
+    bottom: 8%;
+    height: 290px;
+    background: #f8f2e7;
+    transform: rotate(7deg);
+  }
+  .mini-card--one i {
+    width: 6rem;
+    height: 6rem;
+    margin: 1.5rem auto;
+    border-radius: 1.5rem;
+    background: var(--mint);
+  }
+  .mini-card--one b {
+    margin-top: auto;
+    font-family: var(--font-display);
+    font-size: 2rem;
+  }
+  .mini-card--one span { color: var(--muted); font-size: 0.75rem; }
+  .mini-card--two {
+    right: 41%;
+    bottom: 16%;
+    gap: 0.6rem;
+    background: var(--yellow);
+    transform: rotate(-8deg);
+  }
+  .mini-card--two span {
+    padding: 0.75rem;
+    border: 1px solid var(--ink);
+    border-radius: 0.7rem;
+    background: white;
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+  :global(.auth-form) { display: grid; gap: 1rem; }
+  :global(.auth-form .button) { width: 100%; margin-top: 0.35rem; }
+  :global(.auth-form .notice) { margin-bottom: 0.25rem; }
+  :global(.slug-field) {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 0.85rem;
+    background: white;
+  }
+  :global(.slug-field span) {
+    padding-left: 0.9rem;
+    color: #909894;
+    font-size: 0.82rem;
+  }
+  :global(.slug-field input) {
+    border: 0;
+    border-radius: 0;
+    padding-left: 0.15rem;
+    box-shadow: none;
+  }
+  @media (max-width: 880px) {
+    .auth { grid-template-columns: 1fr; }
+    .auth__visual { display: none; }
+    .auth__form { min-height: 100dvh; }
+  }
+</style>

@@ -6,6 +6,7 @@ const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
   image = "/img/jose-profile.jpeg",
+  bodyClass = "",
 } = Astro.props;
 ---
 <!doctype html>
@@ -13,7 +14,7 @@ const {
   <head>
     <BaseHead title={title} description={description} image={image} />
   </head>
-  <body>
+  <body class={bodyClass}>
     <slot />
   </body>
 </html>

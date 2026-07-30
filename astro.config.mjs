@@ -1,10 +1,12 @@
 import { defineConfig } from 'astro/config';
-
-
+import node from '@astrojs/node';
 
 // https://astro.build/config
 export default defineConfig({
-  // Sustituir con SITE_URL en el despliegue si el dominio definitivo cambia.
   site: process.env.SITE_URL || 'https://enlaces-app-production.up.railway.app',
   trailingSlash: 'never',
+  output: 'server',
+  adapter: node({
+    mode: 'standalone',
+  }),
 });

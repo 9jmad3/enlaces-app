@@ -1,20 +1,14 @@
 ---
-import { getProfileBySlug } from "../data/profiles.js";
+import Layout from '../layouts/Layout.astro';
+import Landing from '../components/Landing.astro';
 
-const profile = getProfileBySlug("jmaledom");
-
-if (!profile) {
-  throw new Error("Default profile not found");
-}
+const user = Astro.locals.user;
+const paypalUrl = import.meta.env.PAYPAL_URL;
 ---
 
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta http-equiv="refresh" content={`0; url=/${profile.slug}`} />
-    <title>Redirigiendo...</title>
-  </head>
-  <body>
-    <p>Redirigiendo a tu perfil...</p>
-  </body>
-</html>
+<Layout
+  title="Nexo | Todo lo tuyo, en un solo enlace"
+  description="Crea gratis una pagina personal para compartir tus redes, proyectos y enlaces desde una sola URL."
+>
+  <Landing user={user} paypalUrl={paypalUrl} />
+</Layout>

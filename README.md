@@ -1,9 +1,54 @@
-﻿# enlaces-boca-a-boca
+# Nexo
 
-Landing tipo link-in-bio para José, pensada para móvil, con enlaces a Instagram, TikTok, blog y Zumub España.
+Aplicacion gratuita para crear una pagina personal de enlaces. Cada usuario
+puede registrarse, elegir una plantilla, personalizar los colores y publicar su
+perfil en `/<usuario>`.
+
+## Stack
+
+- Astro 7 en modo servidor
+- Adaptador Node en modo standalone
+- PostgreSQL
+- Sesiones persistentes con cookies seguras
+- `bcryptjs` para el hash de contrasenas
+
+## Desarrollo local
+
+1. Copia `.env.example` a `.env`.
+2. Configura una base de datos PostgreSQL en `DATABASE_URL`.
+3. Ejecuta `npm run db:migrate`.
+4. Arranca la aplicacion con `npm run dev`.
+
+Sin `DATABASE_URL`, la landing, las pantallas de acceso y `/jmaledom` siguen
+funcionando. El registro y el panel requieren PostgreSQL.
 
 ## Scripts
 
-- `npm run dev`: desarrollo local
-- `npm run build`: genera el build de producción
-- `npm run preview`: arranca una vista previa local del build
+- `npm run dev`: servidor de desarrollo
+- `npm run check`: validacion de Astro y TypeScript
+- `npm run build`: build de produccion
+- `npm run start`: migraciones y servidor Node de produccion
+- `npm run db:migrate`: aplica las migraciones SQL pendientes
+
+## Railway
+
+1. Anade PostgreSQL al mismo proyecto de Railway.
+2. En el servicio web crea `DATABASE_URL` con el valor
+   `${{Postgres.DATABASE_URL}}`.
+3. Anade `SITE_URL` con el dominio publico completo.
+4. Anade `PAYPAL_URL` si quieres mostrar el enlace para apoyar el proyecto.
+5. Si la conexion de PostgreSQL no usa SSL, configura `DATABASE_SSL=false`.
+6. Railway detectara `npm run build` y arrancara con `npm run start`.
+7. Puedes usar `/api/health` como healthcheck.
+
+No se usa `astro preview` en produccion y no hace falta configurar
+`preview.allowedHosts`.
+
+## Datos
+
+Las migraciones estan en `database/`. La primera crea usuarios, perfiles,
+enlaces configurables y sesiones.
+
+El perfil historico de Jose se mantiene como respaldo en `/jmaledom`. Cuando se
+registre una cuenta con ese usuario, el perfil guardado en PostgreSQL tendra
+prioridad.

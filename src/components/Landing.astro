@@ -1,0 +1,396 @@
+---
+import SiteHeader from './SiteHeader.astro';
+
+const { user = null, paypalUrl = '' } = Astro.props;
+const primaryHref = user ? '/app' : '/registro';
+---
+
+<div class="hero-wrap">
+  <SiteHeader user={user} />
+  <section class="hero shell">
+    <div class="hero__copy">
+      <p class="eyebrow">Tu rincón en internet</p>
+      <h1>Todo lo tuyo.<br /><em>Un solo enlace.</em></h1>
+      <p class="hero__lead">
+        Reúne lo que haces, lo que compartes y dónde encontrarte en una página
+        que se siente realmente tuya.
+      </p>
+      <div class="hero__actions">
+        <a class="button button--coral" href={primaryHref}>
+          {user ? 'Editar mi página' : 'Crear la mía gratis'} <span>↗</span>
+        </a>
+        <a class="text-link" href="/jmaledom">Ver un ejemplo real</a>
+      </div>
+      <p class="hero__micro">Sin planes. Sin tarjeta. Publicada en minutos.</p>
+    </div>
+
+    <div class="hero__visual" aria-label="Ejemplo de una pagina creada con Nexo">
+      <span class="shape shape--mint"></span>
+      <span class="shape shape--yellow"></span>
+      <div class="phone">
+        <div class="phone__top"><span></span></div>
+        <img src="/img/jose-profile.jpeg" alt="José" />
+        <p class="phone__name">José</p>
+        <p class="phone__tagline">Vida, código y movimiento.</p>
+        <div class="phone__links">
+          <span>Instagram <b>↗</b></span>
+          <span>Mi blog <b>↗</b></span>
+          <span>Zumub España <b>↗</b></span>
+        </div>
+        <small>hecho con <strong>Nexo</strong></small>
+      </div>
+      <div class="note">Tu estilo,<br />no el de todos.</div>
+    </div>
+  </section>
+</div>
+
+<section class="manifesto">
+  <div class="shell manifesto__grid">
+    <p class="eyebrow">Simple por fuera</p>
+    <h2>Una pequeña página que dice mucho de ti.</h2>
+    <div class="manifesto__text">
+      <p>
+        Elige un diseño, cambia los colores y decide qué quieres mostrar.
+        Nosotros nos ocupamos del resto.
+      </p>
+      <a href="#como-funciona">Así funciona ↓</a>
+    </div>
+  </div>
+</section>
+
+<section class="features shell" id="como-funciona">
+  <article>
+    <span>01</span>
+    <div class="feature-icon feature-icon--coral">Aa</div>
+    <h3>Elige tu estilo</h3>
+    <p>Dos diseños con personalidad y colores totalmente configurables.</p>
+  </article>
+  <article>
+    <span>02</span>
+    <div class="feature-icon feature-icon--mint">＋</div>
+    <h3>Añade tus enlaces</h3>
+    <p>Activa solo lo importante y ordénalo para que se entienda al instante.</p>
+  </article>
+  <article>
+    <span>03</span>
+    <div class="feature-icon feature-icon--yellow">↗</div>
+    <h3>Comparte tu Nexo</h3>
+    <p>Una dirección corta, lista para tu bio, mensajes o tarjeta de visita.</p>
+  </article>
+</section>
+
+<section class="choice">
+  <div class="shell choice__inner">
+    <div>
+      <p class="eyebrow">Dos formas de ser tú</p>
+      <h2>Editorial o enérgica.<br />Tú decides.</h2>
+    </div>
+    <div class="template-stack">
+      <div class="template-card template-card--studio">
+        <small>Plantilla 01</small>
+        <i></i>
+        <strong>Studio</strong>
+        <span>Serena, limpia y editorial.</span>
+      </div>
+      <div class="template-card template-card--pulse">
+        <small>Plantilla 02</small>
+        <i></i>
+        <strong>Pulse</strong>
+        <span>Directa, gráfica y con ritmo.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="shell final-cta__inner">
+    <span class="spark">✦</span>
+    <h2>Tu espacio ya tiene sitio.</h2>
+    <p>Solo falta ponerle tu nombre.</p>
+    <a class="button" href={primaryHref}>
+      {user ? 'Ir a mi panel' : 'Crear mi página gratis'} ↗
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="shell footer__inner">
+    <a class="footer-brand" href="/">Nexo<span>.</span></a>
+    <p>Hecho con intención por José.</p>
+    <div>
+      {paypalUrl && (
+        <a href={paypalUrl} target="_blank" rel="noopener noreferrer">
+          Invítame a un café
+        </a>
+      )}
+      <a href="/jmaledom">Contacto</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .hero-wrap {
+    overflow: hidden;
+    background:
+      linear-gradient(rgba(23, 32, 29, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23, 32, 29, 0.045) 1px, transparent 1px),
+      var(--paper);
+    background-size: 34px 34px;
+  }
+  .hero {
+    display: grid;
+    grid-template-columns: 1.02fr 0.98fr;
+    align-items: center;
+    min-height: 690px;
+    padding-block: 3.5rem 5.5rem;
+  }
+  .hero__copy { position: relative; z-index: 2; max-width: 650px; }
+  h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 620;
+    letter-spacing: -0.055em;
+  }
+  h1 {
+    margin: 1.2rem 0 1.35rem;
+    font-size: clamp(4rem, 7.8vw, 7rem);
+    line-height: 0.82;
+  }
+  h1 em { color: var(--coral); font-weight: 430; }
+  .hero__lead {
+    max-width: 590px;
+    color: #4d5955;
+    font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+    line-height: 1.6;
+  }
+  .hero__actions {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+  .hero__actions .button { padding-inline: 1.4rem; }
+  .text-link { text-underline-offset: 0.28rem; font-size: 0.9rem; font-weight: 750; }
+  .hero__micro { margin-top: 1rem; color: #7b8581; font-size: 0.76rem; }
+  .hero__visual { position: relative; display: grid; min-height: 580px; place-items: center; }
+  .phone {
+    position: relative;
+    z-index: 3;
+    width: min(310px, 75vw);
+    min-height: 560px;
+    padding: 1rem 1.2rem 1.3rem;
+    overflow: hidden;
+    border: 8px solid var(--ink);
+    border-radius: 2.8rem;
+    background: #eef3f1;
+    box-shadow: 0 35px 70px rgba(23, 32, 29, 0.24);
+    transform: rotate(3deg);
+  }
+  .phone::before {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0, #b9ddcf 0 18%, transparent 18.3%);
+    content: '';
+  }
+  .phone__top { position: relative; z-index: 1; display: flex; justify-content: center; height: 1.6rem; }
+  .phone__top span { width: 4.5rem; height: 0.4rem; border-radius: 99px; background: var(--ink); }
+  .phone img {
+    position: relative;
+    width: 7.2rem;
+    height: 7.2rem;
+    margin: 1rem auto;
+    border: 4px solid white;
+    border-radius: 1.8rem;
+    object-fit: cover;
+    object-position: center top;
+    box-shadow: 0 12px 30px rgba(23, 32, 29, 0.18);
+  }
+  .phone__name {
+    position: relative;
+    margin: 0;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    font-weight: 650;
+  }
+  .phone__tagline {
+    position: relative;
+    margin: 0.2rem 0 1.2rem;
+    text-align: center;
+    color: #5c6864;
+    font-size: 0.78rem;
+  }
+  .phone__links { position: relative; display: grid; gap: 0.6rem; }
+  .phone__links span {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(23, 32, 29, 0.12);
+    border-radius: 0.8rem;
+    background: white;
+    font-size: 0.8rem;
+    font-weight: 750;
+  }
+  .phone__links b { color: var(--coral); }
+  .phone small {
+    position: absolute;
+    right: 0;
+    bottom: 1rem;
+    left: 0;
+    text-align: center;
+    color: #78827e;
+    font-size: 0.64rem;
+  }
+  .shape { position: absolute; display: block; }
+  .shape--mint {
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    background: var(--mint);
+    transform: translate(3rem, -2rem);
+  }
+  .shape--yellow {
+    width: 220px;
+    height: 220px;
+    border-radius: 42% 58% 60% 40%;
+    background: var(--yellow);
+    transform: translate(-9rem, 11rem) rotate(20deg);
+  }
+  .note {
+    position: absolute;
+    z-index: 4;
+    right: 0;
+    bottom: 5rem;
+    padding: 1rem 1.25rem;
+    background: var(--coral);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    line-height: 1.05;
+    transform: rotate(-6deg);
+    box-shadow: 0 12px 30px rgba(111, 35, 21, 0.2);
+  }
+  .manifesto { padding: 7rem 0; background: var(--ink); color: var(--paper); }
+  .manifesto__grid {
+    display: grid;
+    grid-template-columns: 0.6fr 1.5fr 0.75fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .manifesto .eyebrow { color: var(--yellow); }
+  .manifesto h2, .choice h2, .final-cta h2 {
+    margin: 0;
+    font-size: clamp(2.7rem, 5.8vw, 5.4rem);
+    line-height: 0.95;
+  }
+  .manifesto__text { color: #c3cbc7; line-height: 1.7; }
+  .manifesto__text p { margin-top: 0; }
+  .manifesto__text a { color: var(--paper); font-weight: 750; text-underline-offset: 0.3rem; }
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); padding-block: 7rem; }
+  .features article { position: relative; padding: 0 2.6rem 0 0; }
+  .features article + article { padding-left: 2.6rem; border-left: 1px solid var(--line); }
+  .features article > span { color: #939b97; font-size: 0.72rem; font-weight: 800; }
+  .feature-icon {
+    display: grid;
+    width: 4.3rem;
+    height: 4.3rem;
+    margin: 2.8rem 0 1.7rem;
+    place-items: center;
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 650;
+  }
+  .feature-icon--coral { background: #f5b4a7; transform: rotate(-7deg); }
+  .feature-icon--mint { background: var(--mint); border-radius: 1.2rem 2.2rem; }
+  .feature-icon--yellow { background: var(--yellow); transform: rotate(8deg); }
+  .features h3 {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    letter-spacing: -0.03em;
+  }
+  .features p {
+    max-width: 290px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.7;
+  }
+  .choice { padding: 7rem 0; overflow: hidden; background: #e6eee9; }
+  .choice__inner {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 5rem;
+    align-items: center;
+  }
+  .choice h2 { margin-top: 1.2rem; }
+  .template-stack { position: relative; min-height: 430px; }
+  .template-card {
+    position: absolute;
+    display: flex;
+    width: 280px;
+    height: 390px;
+    padding: 1.5rem;
+    flex-direction: column;
+    border: 7px solid var(--ink);
+    border-radius: 2.3rem;
+    box-shadow: var(--shadow);
+  }
+  .template-card small {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .template-card i {
+    width: 7rem;
+    height: 7rem;
+    margin: 3rem auto;
+    border-radius: 50%;
+    background: var(--coral);
+  }
+  .template-card strong { margin-top: auto; font-family: var(--font-display); font-size: 3rem; }
+  .template-card span { margin-top: 0.3rem; font-size: 0.76rem; }
+  .template-card--studio { left: 8%; background: #f9f3e8; transform: rotate(-7deg); }
+  .template-card--studio i { border-radius: 1.5rem; background: var(--mint); }
+  .template-card--pulse { right: 8%; top: 1rem; background: var(--yellow); transform: rotate(8deg); }
+  .final-cta { padding: 7.5rem 0; text-align: center; background: var(--coral); color: white; }
+  .final-cta__inner { display: flex; align-items: center; flex-direction: column; }
+  .spark { margin-bottom: 1.5rem; color: var(--yellow); font-size: 2.8rem; }
+  .final-cta p { margin: 1rem 0 2rem; font-size: 1.12rem; }
+  footer { padding: 2rem 0; background: var(--ink); color: var(--paper); }
+  .footer__inner, .footer__inner div { display: flex; align-items: center; }
+  .footer__inner { justify-content: space-between; }
+  .footer__inner p { color: #aeb8b4; font-size: 0.8rem; }
+  .footer__inner div { gap: 1.2rem; }
+  .footer__inner div a { font-size: 0.8rem; text-underline-offset: 0.25rem; }
+  .footer-brand { text-decoration: none; font-size: 1.2rem; font-weight: 850; }
+  .footer-brand span { color: var(--coral); }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding-top: 4rem; }
+    .hero__copy { text-align: center; margin-inline: auto; }
+    .hero__copy .eyebrow, .hero__actions { justify-content: center; }
+    .hero__lead { margin-inline: auto; }
+    .hero__visual { margin-top: 2rem; }
+    .manifesto__grid { grid-template-columns: 1fr; }
+    .manifesto__text { max-width: 600px; }
+    .choice__inner { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .hero { min-height: auto; padding-block: 3.2rem 4rem; }
+    h1 { font-size: clamp(3.5rem, 18vw, 5.3rem); }
+    .hero__actions { flex-direction: column; gap: 1rem; }
+    .hero__visual { min-height: 540px; }
+    .note { right: -0.3rem; bottom: 3rem; }
+    .manifesto, .choice, .final-cta { padding-block: 5rem; }
+    .features { grid-template-columns: 1fr; padding-block: 4.5rem; }
+    .features article { padding: 1.5rem 0 2.5rem; }
+    .features article + article { padding-left: 0; border-top: 1px solid var(--line); border-left: 0; }
+    .feature-icon { margin-block: 1.6rem 1.2rem; }
+    .template-stack { min-height: 370px; transform: scale(0.82); transform-origin: center top; }
+    .template-card--studio { left: -1rem; }
+    .template-card--pulse { right: -1rem; }
+    .footer__inner { gap: 1rem; align-items: flex-start; flex-direction: column; }
+  }
+</style>

@@ -1,0 +1,312 @@
+---
+interface ProfileLink {
+  id: string;
+  title: string;
+  url: string;
+  enabled: boolean;
+  position: number;
+}
+
+interface Profile {
+  slug: string;
+  display_name: string;
+  tagline: string;
+  bio: string;
+  avatar_url: string;
+  template_id: 'studio' | 'pulse';
+  background_color: string;
+  accent_color: string;
+  text_color: string;
+  links: ProfileLink[];
+}
+
+interface Props {
+  profile: Profile;
+  paypalUrl?: string;
+}
+
+const { profile, paypalUrl = '' }: Props = Astro.props;
+const isPulse = profile.template_id === 'pulse';
+const initials = profile.display_name
+  .split(/\s+/)
+  .slice(0, 2)
+  .map((part) => part[0])
+  .join('')
+  .toUpperCase();
+const style = `--profile-bg:${profile.background_color};--profile-accent:${profile.accent_color};--profile-text:${profile.text_color}`;
+---
+
+<main class:list={['profile-page', { 'profile-page--pulse': isPulse }]} style={style}>
+  <button class="share" type="button" aria-label="Compartir esta página">
+    <span>Compartir</span><b aria-hidden="true">↗</b>
+  </button>
+
+  <section class="profile-card">
+    <div class="profile-card__decor" aria-hidden="true"></div>
+    <header>
+      {profile.avatar_url ? (
+        <img src={profile.avatar_url} alt={`Foto de ${profile.display_name}`} />
+      ) : (
+        <div class="avatar-fallback" aria-hidden="true">{initials}</div>
+      )}
+      <div class="identity">
+        <p class="handle">@{profile.slug}</p>
+        <h1>{profile.display_name}</h1>
+        {profile.tagline && <p class="tagline">{profile.tagline}</p>}
+      </div>
+    </header>
+
+    {profile.bio && <p class="bio">{profile.bio}</p>}
+
+    <nav class="profile-links" aria-label={`Enlaces de ${profile.display_name}`}>
+      {profile.links.map((link, index) => (
+        <a href={link.url} target="_blank" rel="nofollow noopener noreferrer">
+          <span class="link-number">{String(index + 1).padStart(2, '0')}</span>
+          <strong>{link.title}</strong>
+          <span class="link-arrow" aria-hidden="true">↗</span>
+        </a>
+      ))}
+    </nav>
+  </section>
+
+  <footer class="profile-footer">
+    <a class="made-with" href="/"><span>N</span> Hecho con Nexo</a>
+    <div>
+      {paypalUrl && (
+        <a href={paypalUrl} target="_blank" rel="noopener noreferrer">Apoyar el proyecto</a>
+      )}
+      <a href="/registro">Crea el tuyo</a>
+    </div>
+  </footer>
+</main>
+
+<script>
+  const shareButton = document.querySelector('.share');
+  shareButton?.addEventListener('click', async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: document.title, url: window.location.href });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        const label = shareButton.querySelector('span');
+        if (label) {
+          label.textContent = 'Enlace copiado';
+          window.setTimeout(() => { label.textContent = 'Compartir'; }, 1800);
+        }
+      }
+    } catch {
+      // El usuario puede cancelar el dialogo de compartir.
+    }
+  });
+</script>
+
+<style>
+  .profile-page {
+    --soft-contrast: color-mix(in srgb, var(--profile-text) 12%, transparent);
+    position: relative;
+    display: flex;
+    min-height: 100dvh;
+    overflow: hidden;
+    padding: 4.5rem 1rem 1.2rem;
+    flex-direction: column;
+    background:
+      linear-gradient(var(--soft-contrast) 1px, transparent 1px),
+      linear-gradient(90deg, var(--soft-contrast) 1px, transparent 1px),
+      var(--profile-bg);
+    background-size: 38px 38px;
+    color: var(--profile-text);
+  }
+  .share {
+    position: absolute;
+    z-index: 4;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.5rem;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid var(--soft-contrast);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--profile-bg) 86%, white);
+    color: var(--profile-text);
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .share b { color: var(--profile-accent); font-size: 1rem; }
+  .profile-card {
+    position: relative;
+    z-index: 2;
+    width: min(100%, 540px);
+    margin: auto;
+    padding: clamp(1.1rem, 4vw, 2rem);
+  }
+  .profile-card__decor {
+    position: absolute;
+    z-index: -1;
+    top: -5rem;
+    right: -7rem;
+    width: 18rem;
+    height: 18rem;
+    border: 2.5rem solid var(--profile-accent);
+    border-radius: 50%;
+    opacity: 0.16;
+  }
+  header { display: flex; align-items: flex-end; gap: 1.2rem; }
+  header img, .avatar-fallback {
+    width: clamp(6rem, 22vw, 8rem);
+    height: clamp(7rem, 25vw, 9.5rem);
+    flex: 0 0 auto;
+    border: 4px solid color-mix(in srgb, var(--profile-bg) 75%, white);
+    border-radius: 1.5rem 1.5rem 1.5rem 0.35rem;
+    box-shadow: 0 18px 40px color-mix(in srgb, var(--profile-text) 18%, transparent);
+    object-fit: cover;
+    object-position: center top;
+  }
+  .avatar-fallback {
+    display: grid;
+    place-items: center;
+    background: var(--profile-accent);
+    color: var(--profile-bg);
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 650;
+  }
+  .identity { min-width: 0; padding-bottom: 0.35rem; }
+  .handle {
+    margin: 0 0 0.35rem;
+    color: var(--profile-accent);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-display);
+    font-size: clamp(2.7rem, 12vw, 4.7rem);
+    font-weight: 650;
+    letter-spacing: -0.06em;
+    line-height: 0.82;
+  }
+  .tagline { margin: 0.65rem 0 0; font-size: 0.82rem; font-weight: 700; line-height: 1.4; }
+  .bio {
+    margin: 1.8rem 0;
+    color: color-mix(in srgb, var(--profile-text) 72%, transparent);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .profile-links { display: grid; gap: 0.72rem; }
+  .profile-links a {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr auto;
+    min-height: 4.3rem;
+    padding: 0.8rem 1rem;
+    align-items: center;
+    border: 1px solid var(--soft-contrast);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--profile-bg) 84%, white);
+    color: var(--profile-text);
+    box-shadow: 0 9px 22px color-mix(in srgb, var(--profile-text) 6%, transparent);
+    text-decoration: none;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .profile-links a:hover {
+    transform: translateY(-2px) rotate(-0.3deg);
+    box-shadow: 0 14px 28px color-mix(in srgb, var(--profile-text) 11%, transparent);
+  }
+  .link-number { color: color-mix(in srgb, var(--profile-text) 45%, transparent); font-size: 0.66rem; font-weight: 800; }
+  .profile-links strong { overflow-wrap: anywhere; font-size: 0.92rem; }
+  .link-arrow {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--profile-accent);
+    color: var(--profile-bg);
+    font-weight: 850;
+  }
+  .profile-footer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    width: min(100%, 540px);
+    margin: 2rem auto 0;
+    padding-top: 1rem;
+    justify-content: space-between;
+    border-top: 1px solid var(--soft-contrast);
+    color: color-mix(in srgb, var(--profile-text) 65%, transparent);
+    font-size: 0.68rem;
+  }
+  .profile-footer a { text-underline-offset: 0.2rem; }
+  .profile-footer > div { display: flex; gap: 0.8rem; }
+  .made-with { display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none; font-weight: 750; }
+  .made-with span {
+    display: grid;
+    width: 1.4rem;
+    height: 1.4rem;
+    place-items: center;
+    border-radius: 0.4rem;
+    background: var(--profile-text);
+    color: var(--profile-bg);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+  }
+  .profile-page--pulse {
+    background:
+      radial-gradient(circle at 0 0, var(--profile-accent) 0 17%, transparent 17.2%),
+      radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--profile-accent) 60%, white) 0 15%, transparent 15.2%),
+      var(--profile-bg);
+  }
+  .profile-page--pulse .profile-card { padding-top: 2.5rem; }
+  .profile-page--pulse .profile-card__decor {
+    top: -3rem;
+    right: auto;
+    left: -4rem;
+    width: 10rem;
+    height: 10rem;
+    border: 0;
+    border-radius: 1.5rem;
+    background: var(--profile-accent);
+    opacity: 0.2;
+    transform: rotate(22deg);
+  }
+  .profile-page--pulse header { align-items: center; flex-direction: column; text-align: center; }
+  .profile-page--pulse header img, .profile-page--pulse .avatar-fallback {
+    width: 9rem;
+    height: 9rem;
+    border: 6px solid var(--profile-text);
+    border-radius: 50%;
+    box-shadow: 10px 10px 0 var(--profile-accent);
+  }
+  .profile-page--pulse h1 {
+    margin-top: 0.5rem;
+    font-family: var(--font-body);
+    font-size: clamp(2.3rem, 10vw, 3.5rem);
+    font-weight: 900;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+  .profile-page--pulse .bio { text-align: center; }
+  .profile-page--pulse .profile-links a {
+    min-height: 4.6rem;
+    border: 3px solid var(--profile-text);
+    border-radius: 0;
+    background: var(--profile-accent);
+    box-shadow: 6px 6px 0 var(--profile-text);
+  }
+  .profile-page--pulse .profile-links a:nth-child(even) {
+    background: color-mix(in srgb, var(--profile-bg) 82%, white);
+  }
+  .profile-page--pulse .link-number { color: var(--profile-text); }
+  .profile-page--pulse .link-arrow { background: var(--profile-text); color: var(--profile-bg); }
+  @media (max-width: 480px) {
+    .profile-page { padding-inline: 0.55rem; }
+    .profile-card { padding-inline: 0.55rem; }
+    header { align-items: center; }
+    .profile-footer { padding-inline: 0.55rem; align-items: flex-start; gap: 0.8rem; flex-direction: column; }
+  }
+</style>

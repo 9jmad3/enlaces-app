@@ -1,17 +1,27 @@
 {
   "name": "enlaces-boca-a-boca",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "start": "npm run db:migrate && node ./dist/server/entry.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "check": "astro check"
   },
   "dependencies": {
-    "@astrojs/rss": "^4.0.11",
-    "@fontsource-variable/montserrat": "^5.0.19",
-    "astro": "^5.1.8"
+    "@astrojs/node": "^11.0.3",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/manrope": "^5.3.0",
+    "astro": "^7.1.6",
+    "bcryptjs": "^3.0.3",
+    "pg": "^8.22.0"
   },
-  "description": "A link-in-bio page for growing by word of mouth"
+  "description": "Crea y publica una pagina personal de enlaces en minutos",
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "typescript": "^6.0.3"
+  }
 }
