@@ -4,6 +4,7 @@ import Landing from '../components/Landing.astro';
 import { DEFAULT_PAYPAL_URL } from '../const';
 
 const user = Astro.locals.user;
+const accountDeleted = Astro.url.searchParams.get('accountDeleted');
 const paypalUrl = import.meta.env.DONATIONS_ENABLED !== 'false'
   ? import.meta.env.PAYPAL_URL || DEFAULT_PAYPAL_URL
   : '';
@@ -13,5 +14,5 @@ const paypalUrl = import.meta.env.DONATIONS_ENABLED !== 'false'
   title="Nexo | Todo lo tuyo, en un solo enlace"
   description="Crea gratis una pagina personal para compartir tus redes, proyectos y enlaces desde una sola URL."
 >
-  <Landing user={user} paypalUrl={paypalUrl} />
+  <Landing user={user} paypalUrl={paypalUrl} accountDeleted={accountDeleted} />
 </Layout>

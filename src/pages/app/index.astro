@@ -24,7 +24,8 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
   <header class="app-header">
     <a class="brand" href="/"><span>N</span>Nexo</a>
     <div class="app-header__actions">
-      <a href={`/${profile.slug}`} target="_blank">Ver mi página ↗</a>
+      <a class="view-profile-link" href={`/${profile.slug}`} target="_blank">Ver mi página ↗</a>
+      <a href="/app/cuenta">Cuenta</a>
       <form action="/api/auth/logout" method="post">
         <button type="submit">Salir</button>
       </form>
@@ -757,7 +758,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
     .editor { width: 100%; padding-top: 1rem; }
   }
   @media (max-width: 520px) {
-    .app-header__actions a { display: none; }
+    .app-header__actions .view-profile-link { display: none; }
     .fields-grid, .template-options { grid-template-columns: 1fr; }
     .link-row { grid-template-columns: 1rem minmax(0, 1fr) auto auto; gap: 0.35rem; }
     .link-fields { grid-template-columns: 1fr; }

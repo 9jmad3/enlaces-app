@@ -14,7 +14,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (context.url.pathname.startsWith('/app') && !context.locals.user) {
-    return context.redirect('/login?next=/app');
+    const next = encodeURIComponent(context.url.pathname);
+    return context.redirect(`/login?next=${next}`);
   }
 
   const response = await next();

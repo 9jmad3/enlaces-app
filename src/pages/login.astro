@@ -4,6 +4,10 @@ import AuthShell from '../components/AuthShell.astro';
 
 if (Astro.locals.user) return Astro.redirect('/app');
 const error = Astro.url.searchParams.get('error');
+const requestedNext = Astro.url.searchParams.get('next') || '';
+const next = requestedNext === '/app' || requestedNext.startsWith('/app/')
+  ? requestedNext
+  : '/app';
 ---
 
 <Layout title="Entrar | Nexo" description="Accede a tu cuenta de Nexo.">
@@ -16,6 +20,7 @@ const error = Astro.url.searchParams.get('error');
   >
     <form class="auth-form" action="/api/auth/login" method="post">
       {error && <p class="notice" role="alert">{error}</p>}
+      <input type="hidden" name="next" value={next} />
       <div class="field">
         <label for="email">Correo electrónico</label>
         <input id="email" name="email" type="email" autocomplete="email" required />

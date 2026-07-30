@@ -2,12 +2,17 @@
 import SiteHeader from './SiteHeader.astro';
 import LegalFooter from './LegalFooter.astro';
 
-const { user = null, paypalUrl = '' } = Astro.props;
+const { user = null, paypalUrl = '', accountDeleted = false } = Astro.props;
 const primaryHref = user ? '/app' : '/registro';
 ---
 
 <div class="hero-wrap">
   <SiteHeader user={user} />
+  {accountDeleted && (
+    <p class="account-deleted shell" role="status">
+      Tu cuenta y todos sus datos se han eliminado correctamente.
+    </p>
+  )}
   <section class="hero shell">
     <div class="hero__copy">
       <p class="eyebrow">Tu rincón en internet</p>
@@ -140,6 +145,16 @@ const primaryHref = user ? '/app' : '/registro';
       linear-gradient(90deg, rgba(23, 32, 29, 0.045) 1px, transparent 1px),
       var(--paper);
     background-size: 34px 34px;
+  }
+  .account-deleted {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid #add9c8;
+    border-radius: 0.8rem;
+    background: #eaf7f1;
+    color: #195f49;
+    font-size: 0.86rem;
+    font-weight: 700;
   }
   .hero {
     display: grid;

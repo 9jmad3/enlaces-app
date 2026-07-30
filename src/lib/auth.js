@@ -52,6 +52,47 @@ export async function authenticate(email, password) {
   return { id: user.id, email: user.email };
 }
 
+export async function verifyUserPassword(userId, password) {
+  const result = await query(
+    'SELECT password_hash FROM users WHERE id = $1',
+    [userId],
+  );
+  const user = result.rows[0];
+  return Boolean(user && await bcrypt.compare(password, user.password_hash));
+}
+
+export async function updateUserEmail(userId, email) {
+  await query(
+    'UPDATE users SET email = $1, updated_at = NOW() WHERE id = $2',
+    [email, userId],
+  );
+}
+
+export async function updateUserPassword(userId, password) {
+  const passwordHash = await bcrypt.hash(password, 12);
+  const token = randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+
+  await transaction(async (client) => {
+    await client.query(
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [passwordHash, userId],
+    );
+    await client.query('DELETE FROM sessions WHERE user_id = $1', [userId]);
+    await client.query(
+      `INSERT INTO sessions (id, user_id, token_hash, expires_at)
+       VALUES ($1, $2, $3, $4)`,
+      [randomUUID(), userId, hashToken(token), expiresAt],
+    );
+  });
+
+  return { token, expiresAt };
+}
+
+export async function deleteUserAccount(userId) {
+  await query('DELETE FROM users WHERE id = $1', [userId]);
+}
+
 export async function createSession(userId) {
   const token = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);

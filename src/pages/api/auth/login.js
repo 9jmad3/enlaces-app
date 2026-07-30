@@ -30,6 +30,10 @@ export async function POST({ request, cookies, redirect }) {
   const form = await request.formData();
   const email = normalizeEmail(form.get('email'));
   const password = String(form.get('password') || '');
+  const requestedNext = String(form.get('next') || '');
+  const next = requestedNext === '/app' || requestedNext.startsWith('/app/')
+    ? requestedNext
+    : '/app';
 
   try {
     const user = await authenticate(email, password);
@@ -39,7 +43,7 @@ export async function POST({ request, cookies, redirect }) {
 
     const session = await createSession(user.id);
     setSessionCookie(cookies, session);
-    return redirect('/app');
+    return redirect(next);
   } catch (error) {
     console.error('No se pudo iniciar sesion', error);
     return redirect(loginError('No hemos podido iniciar sesion. Intentalo de nuevo.'));

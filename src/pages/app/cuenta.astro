@@ -1,0 +1,277 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import LegalFooter from '../../components/LegalFooter.astro';
+
+export const prerender = false;
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login?next=/app/cuenta');
+
+const error = Astro.url.searchParams.get('error');
+const emailUpdated = Astro.url.searchParams.get('emailUpdated');
+const passwordUpdated = Astro.url.searchParams.get('passwordUpdated');
+---
+
+<Layout title="Cuenta y privacidad | Nexo" description="Administra tu cuenta de Nexo." bodyClass="account-body">
+  <header class="account-header">
+    <a class="brand" href="/"><span>N</span>Nexo</a>
+    <nav aria-label="Navegación de la cuenta">
+      <a href="/app">← Volver al panel</a>
+      <form action="/api/auth/logout" method="post">
+        <button type="submit">Salir</button>
+      </form>
+    </nav>
+  </header>
+
+  <main class="account shell">
+    <header class="account__heading">
+      <p class="eyebrow">Tu cuenta</p>
+      <h1>Cuenta y privacidad.</h1>
+      <p>Actualiza tus datos de acceso o elimina definitivamente tu espacio.</p>
+    </header>
+
+    {error && <p class="notice" role="alert">{error}</p>}
+    {emailUpdated && <p class="notice notice--success" role="status">Correo actualizado correctamente.</p>}
+    {passwordUpdated && (
+      <p class="notice notice--success" role="status">
+        Contraseña actualizada. Las demás sesiones se han cerrado.
+      </p>
+    )}
+
+    <div class="account-grid">
+      <section class="account-card">
+        <div class="account-card__title">
+          <span>01</span>
+          <div>
+            <h2>Cambiar correo</h2>
+            <p>Tu correo se utiliza únicamente para acceder y gestionar la cuenta.</p>
+          </div>
+        </div>
+        <form action="/api/account/email" method="post">
+          <div class="field">
+            <label for="email">Correo electrónico</label>
+            <input id="email" name="email" type="email" value={user.email} autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label for="emailCurrentPassword">Contraseña actual</label>
+            <input
+              id="emailCurrentPassword"
+              name="currentPassword"
+              type="password"
+              maxlength="72"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+          <button class="button" type="submit">Actualizar correo</button>
+        </form>
+      </section>
+
+      <section class="account-card">
+        <div class="account-card__title">
+          <span>02</span>
+          <div>
+            <h2>Cambiar contraseña</h2>
+            <p>Al guardarla cerraremos todas las demás sesiones abiertas.</p>
+          </div>
+        </div>
+        <form action="/api/account/password" method="post">
+          <div class="field">
+            <label for="passwordCurrentPassword">Contraseña actual</label>
+            <input
+              id="passwordCurrentPassword"
+              name="currentPassword"
+              type="password"
+              maxlength="72"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="password">Nueva contraseña</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              minlength="8"
+              maxlength="72"
+              autocomplete="new-password"
+              required
+            />
+            <small class="field__hint">Entre 8 y 72 caracteres.</small>
+          </div>
+          <div class="field">
+            <label for="passwordConfirmation">Repite la nueva contraseña</label>
+            <input
+              id="passwordConfirmation"
+              name="passwordConfirmation"
+              type="password"
+              minlength="8"
+              maxlength="72"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+          <button class="button" type="submit">Actualizar contraseña</button>
+        </form>
+      </section>
+    </div>
+
+    <section class="danger-card">
+      <div>
+        <p class="eyebrow">Zona de peligro</p>
+        <h2>Eliminar mi cuenta</h2>
+        <p>
+          Se borrarán definitivamente tu cuenta, perfil, fotografía, enlaces y sesiones. Esta
+          acción no se puede deshacer y tu dirección pública quedará libre.
+        </p>
+      </div>
+      <form action="/api/account/delete" method="post" data-delete-account>
+        <div class="field">
+          <label for="deleteCurrentPassword">Contraseña actual</label>
+          <input
+            id="deleteCurrentPassword"
+            name="currentPassword"
+            type="password"
+            maxlength="72"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="confirmation">Escribe ELIMINAR para confirmar</label>
+          <input
+            id="confirmation"
+            name="confirmation"
+            type="text"
+            pattern="ELIMINAR"
+            autocomplete="off"
+            data-delete-confirmation
+            required
+          />
+        </div>
+        <button class="delete-button" type="submit" data-delete-button disabled>
+          Eliminar definitivamente
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <LegalFooter />
+</Layout>
+
+<script>
+  const confirmation = document.querySelector<HTMLInputElement>('[data-delete-confirmation]');
+  const deleteButton = document.querySelector<HTMLButtonElement>('[data-delete-button]');
+  confirmation?.addEventListener('input', () => {
+    if (deleteButton) deleteButton.disabled = confirmation.value.trim() !== 'ELIMINAR';
+  });
+</script>
+
+<style>
+  :global(.account-body) { background: #ebe9e2; }
+  .account-header {
+    position: sticky;
+    z-index: 20;
+    top: 0;
+    display: flex;
+    min-height: 4.5rem;
+    padding: 0.75rem clamp(1rem, 4vw, 3rem);
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    background: rgba(247, 244, 237, 0.92);
+    backdrop-filter: blur(14px);
+  }
+  .brand, nav { display: flex; align-items: center; }
+  .brand { gap: 0.55rem; text-decoration: none; font-weight: 850; }
+  .brand span {
+    display: grid;
+    width: 2.1rem;
+    height: 2.1rem;
+    place-items: center;
+    border-radius: 0.65rem 0.65rem 0.65rem 0.2rem;
+    background: var(--ink);
+    color: white;
+    font-family: var(--font-display);
+  }
+  nav { gap: 1rem; }
+  nav a, nav button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font-size: 0.78rem;
+    font-weight: 750;
+    text-underline-offset: 0.2rem;
+    cursor: pointer;
+  }
+  .account { width: min(940px, calc(100% - 2rem)); padding-block: clamp(3rem, 7vw, 5.5rem); }
+  .account__heading { max-width: 720px; margin-bottom: 2.2rem; }
+  .account__heading h1 {
+    margin: 0.8rem 0 0.6rem;
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 8vw, 6rem);
+    font-weight: 620;
+    letter-spacing: -0.06em;
+    line-height: 0.9;
+  }
+  .account__heading > p:last-child { color: var(--muted); line-height: 1.6; }
+  .account > .notice { margin-bottom: 1rem; }
+  .account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .account-card, .danger-card {
+    padding: clamp(1.2rem, 3vw, 1.8rem);
+    border: 1px solid var(--line);
+    border-radius: 1.2rem;
+    background: var(--surface);
+    box-shadow: 0 12px 40px rgba(36, 43, 40, 0.05);
+  }
+  .account-card__title { display: flex; gap: 0.9rem; align-items: flex-start; }
+  .account-card__title > span {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--ink);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+  }
+  h2 { margin: 0; font-family: var(--font-display); font-size: 1.65rem; font-weight: 650; }
+  .account-card__title p, .danger-card > div > p:last-child {
+    margin: 0.3rem 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+  .account-card form, .danger-card form { display: grid; gap: 1rem; margin-top: 1.4rem; }
+  .account-card .button { width: fit-content; margin-top: 0.2rem; }
+  .danger-card {
+    display: grid;
+    grid-template-columns: 1fr 0.9fr;
+    margin-top: 1.2rem;
+    gap: clamp(1.5rem, 5vw, 4rem);
+    border-color: #e4aaa0;
+    background: #fff8f5;
+  }
+  .danger-card .eyebrow { margin-bottom: 0.8rem; color: #a62e1c; }
+  .delete-button {
+    min-height: 3rem;
+    padding: 0.7rem 1rem;
+    border: 0;
+    border-radius: 999px;
+    background: #b93421;
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .delete-button:disabled { background: #c9c3c0; color: #746e6b; cursor: not-allowed; }
+  @media (max-width: 720px) {
+    .account { width: min(100% - 1rem, 940px); }
+    .account-grid, .danger-card { grid-template-columns: 1fr; }
+    .account-header nav a { font-size: 0.72rem; }
+    .account-header nav { gap: 0.7rem; }
+  }
+</style>
