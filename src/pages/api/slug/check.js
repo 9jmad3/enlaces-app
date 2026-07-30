@@ -17,7 +17,7 @@ function json(body, status = 200) {
 
 export async function GET({ request, locals }) {
   const ip = getClientIp(request);
-  if (isRateLimited(`slug-check:${ip}`, { limit: 60, windowMs: 60_000 })) {
+  if (await isRateLimited(`slug-check:${ip}`, { limit: 60, windowMs: 60_000 })) {
     return json({ available: false, message: 'Espera un momento para seguir comprobando.' }, 429);
   }
 

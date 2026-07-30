@@ -19,7 +19,7 @@ export async function POST({ request, cookies, redirect }) {
   }
 
   const ip = getClientIp(request);
-  if (isRateLimited(`login:${ip}`, { limit: 10, windowMs: 15 * 60_000 })) {
+  if (await isRateLimited(`login:${ip}`, { limit: 10, windowMs: 15 * 60_000 })) {
     return redirect(loginError('Demasiados intentos. Espera unos minutos.'));
   }
 
