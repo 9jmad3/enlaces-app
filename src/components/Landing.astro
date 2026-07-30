@@ -126,7 +126,9 @@ const primaryHref = user ? '/app' : '/registro';
       <a href="https://instagram.com/jmaledom" target="_blank" rel="noopener noreferrer">Contacto</a>
     </div>
   </div>
-  <LegalFooter compact inverse />
+  <div class="shell footer__legal">
+    <LegalFooter compact inverse />
+  </div>
 </footer>
 
 <style>
@@ -359,7 +361,7 @@ const primaryHref = user ? '/app' : '/registro';
   .final-cta__inner { display: flex; align-items: center; flex-direction: column; }
   .spark { margin-bottom: 1.5rem; color: var(--yellow); font-size: 2.8rem; }
   .final-cta p { margin: 1rem 0 2rem; font-size: 1.12rem; }
-  footer { padding: 2rem 0; background: var(--ink); color: var(--paper); }
+  footer { padding: 2.25rem 0 1.1rem; background: var(--ink); color: var(--paper); }
   .footer__inner, .footer__inner div { display: flex; align-items: center; }
   .footer__inner { justify-content: space-between; }
   .footer__inner p { color: #aeb8b4; font-size: 0.8rem; }
@@ -367,6 +369,10 @@ const primaryHref = user ? '/app' : '/registro';
   .footer__inner div a { font-size: 0.8rem; text-underline-offset: 0.25rem; }
   .footer-brand { text-decoration: none; font-size: 1.2rem; font-weight: 850; }
   .footer-brand span { color: var(--coral); }
+  .footer__legal {
+    margin-top: 1.6rem;
+    border-top: 1px solid rgba(247, 244, 237, 0.12);
+  }
 
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; padding-top: 4rem; }
@@ -392,6 +398,9 @@ const primaryHref = user ? '/app' : '/registro';
     .template-stack { min-height: 370px; transform: scale(0.82); transform-origin: center top; }
     .template-card--studio { left: -1rem; }
     .template-card--pulse { right: -1rem; }
+    footer { padding-top: 1.8rem; }
     .footer__inner { gap: 1rem; align-items: flex-start; flex-direction: column; }
+    .footer__inner p { margin: 0; }
+    .footer__legal { margin-top: 1.25rem; }
   }
 </style>
