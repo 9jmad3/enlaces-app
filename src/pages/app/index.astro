@@ -71,21 +71,36 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
           <small class="field__hint">Máximo 280 caracteres.</small>
         </div>
         <div class="field">
-          <label for="avatar">Foto</label>
-          <input
-            id="avatar"
-            name="avatar"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            data-avatar-input
-          />
-          <small class="field__hint">JPG, PNG o WebP. Máximo 3 MB.</small>
-          {profile.avatar_url && (
-            <label class="remove-avatar">
-              <input name="removeAvatar" type="checkbox" data-remove-avatar />
-              Quitar la foto actual
-            </label>
-          )}
+          <span class="field__label">Foto</span>
+          <div class="avatar-uploader" data-current-avatar={profile.avatar_url}>
+            <div class="avatar-uploader__preview" data-upload-preview>
+              {profile.avatar_url
+                ? <img src={profile.avatar_url} alt="" />
+                : <b>{profile.display_name[0]?.toUpperCase()}</b>}
+            </div>
+            <div class="avatar-uploader__content">
+              <input
+                class="avatar-uploader__input"
+                id="avatar"
+                name="avatar"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                data-avatar-input
+              />
+              <div class="avatar-uploader__action">
+                <label class="avatar-uploader__button" for="avatar">Elegir foto</label>
+                <span data-avatar-file-name>Ningún archivo seleccionado</span>
+              </div>
+              <small class="field__hint">JPG, PNG o WebP. Máximo 3 MB.</small>
+              {profile.avatar_url && (
+                <label class="remove-avatar">
+                  <input name="removeAvatar" type="checkbox" data-remove-avatar />
+                  <span class="remove-avatar__box" aria-hidden="true"></span>
+                  <span>Quitar la foto actual</span>
+                </label>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -277,40 +292,61 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
 
   const avatarInput = document.querySelector<HTMLInputElement>('[data-avatar-input]');
   const removeAvatar = document.querySelector<HTMLInputElement>('[data-remove-avatar]');
+  const avatarUploader = document.querySelector<HTMLElement>('.avatar-uploader');
+  const uploadPreview = document.querySelector<HTMLElement>('[data-upload-preview]');
+  const avatarFileName = document.querySelector<HTMLElement>('[data-avatar-file-name]');
+  const currentAvatar = avatarUploader?.dataset.currentAvatar || '';
   let avatarObjectUrl = '';
 
-  const showAvatarPreview = (src = '') => {
-    const avatar = document.querySelector('.preview-avatar');
-    if (!avatar) return;
-    if (!src) {
-      const initial = document.querySelector<HTMLElement>('[data-preview-name]')
-        ?.textContent?.trim()?.[0]?.toUpperCase() || 'N';
-      const fallback = document.createElement('b');
-      fallback.dataset.previewInitials = '';
-      fallback.textContent = initial;
-      avatar.replaceChildren(fallback);
-      return;
+  const createAvatarContent = (src = '') => {
+    if (src) {
+      const image = document.createElement('img');
+      image.src = src;
+      image.alt = '';
+      return image;
     }
-    const image = document.createElement('img');
-    image.src = src;
-    image.alt = '';
-    image.dataset.previewAvatar = '';
-    avatar.replaceChildren(image);
+    const fallback = document.createElement('b');
+    fallback.dataset.previewInitials = '';
+    fallback.textContent = document.querySelector<HTMLElement>('[data-preview-name]')
+      ?.textContent?.trim()?.[0]?.toUpperCase() || 'N';
+    return fallback;
+  };
+
+  const showAvatarPreview = (src = '') => {
+    const avatar = document.querySelector<HTMLElement>('.preview-avatar');
+    if (!src) {
+      avatar?.replaceChildren(createAvatarContent());
+      uploadPreview?.replaceChildren(createAvatarContent());
+    } else {
+      avatar?.replaceChildren(createAvatarContent(src));
+      uploadPreview?.replaceChildren(createAvatarContent(src));
+    }
   };
 
   avatarInput?.addEventListener('change', () => {
     if (avatarObjectUrl) URL.revokeObjectURL(avatarObjectUrl);
     const file = avatarInput.files?.[0];
     if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      avatarInput.setCustomValidity('La foto no puede superar los 3 MB.');
+      avatarFileName && (avatarFileName.textContent = 'El archivo supera los 3 MB');
+      return;
+    }
+    avatarInput.setCustomValidity('');
     avatarObjectUrl = URL.createObjectURL(file);
     if (removeAvatar) removeAvatar.checked = false;
+    if (avatarFileName) avatarFileName.textContent = file.name;
     showAvatarPreview(avatarObjectUrl);
   });
 
   removeAvatar?.addEventListener('change', () => {
     if (removeAvatar.checked) {
       if (avatarInput) avatarInput.value = '';
+      if (avatarFileName) avatarFileName.textContent = 'La foto se quitará al guardar';
       showAvatarPreview();
+    } else {
+      if (avatarFileName) avatarFileName.textContent = 'Ningún archivo seleccionado';
+      showAvatarPreview(currentAvatar);
     }
   });
 
@@ -483,7 +519,96 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
   .slug-input input { border: 0; padding-left: 0.1rem; box-shadow: none; }
   [data-slug-status][data-state='available'] { color: #17704a; }
   [data-slug-status][data-state='unavailable'] { color: #b43824; }
-  .remove-avatar { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--muted); font-size: 0.75rem; }
+  .avatar-uploader {
+    display: grid;
+    grid-template-columns: 5.25rem minmax(0, 1fr);
+    padding: 0.9rem;
+    gap: 1rem;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: #fbfaf6;
+  }
+  .avatar-uploader__preview {
+    display: grid;
+    width: 5.25rem;
+    height: 5.25rem;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 1rem 1rem 1rem 0.3rem;
+    background: var(--mint);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 2rem;
+  }
+  .avatar-uploader__preview img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+  .avatar-uploader__content { display: grid; min-width: 0; gap: 0.48rem; }
+  .field .avatar-uploader__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .avatar-uploader__action { display: flex; min-width: 0; align-items: center; gap: 0.75rem; }
+  .field .avatar-uploader__button {
+    display: inline-flex;
+    min-height: 2.35rem;
+    padding: 0 0.9rem;
+    align-items: center;
+    flex: 0 0 auto;
+    border-radius: 0.7rem;
+    background: var(--ink);
+    color: white;
+    font-size: 0.76rem;
+    cursor: pointer;
+    transition: transform 150ms ease, background 150ms ease;
+  }
+  .avatar-uploader__button:hover { background: var(--coral); transform: translateY(-1px); }
+  .avatar-uploader__input:focus-visible + .avatar-uploader__action .avatar-uploader__button {
+    outline: 3px solid color-mix(in srgb, var(--coral) 30%, transparent);
+    outline-offset: 2px;
+  }
+  .avatar-uploader__action > span {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.74rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .field .remove-avatar {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    cursor: pointer;
+  }
+  .field .remove-avatar input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    opacity: 0;
+  }
+  .remove-avatar__box {
+    display: grid;
+    width: 1rem;
+    height: 1rem;
+    place-items: center;
+    border: 1px solid #b9c0bd;
+    border-radius: 0.28rem;
+    background: white;
+  }
+  .remove-avatar input:checked + .remove-avatar__box { border-color: var(--coral); background: var(--coral); }
+  .remove-avatar input:checked + .remove-avatar__box::after { color: white; content: '✓'; font-size: 0.68rem; font-weight: 900; }
+  .remove-avatar input:focus-visible + .remove-avatar__box { outline: 3px solid rgba(230, 83, 54, 0.18); outline-offset: 2px; }
   .template-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .template-option { cursor: pointer; }
   .template-option input { position: absolute; opacity: 0; pointer-events: none; }
@@ -635,6 +760,9 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
     .link-row { grid-template-columns: 1rem minmax(0, 1fr) auto auto; gap: 0.35rem; }
     .link-fields { grid-template-columns: 1fr; }
     .link-fields input + input { border-top: 1px solid var(--line); border-left: 0; }
+    .avatar-uploader { grid-template-columns: 4.4rem minmax(0, 1fr); padding: 0.75rem; gap: 0.75rem; }
+    .avatar-uploader__preview { width: 4.4rem; height: 4.4rem; }
+    .avatar-uploader__action { align-items: flex-start; flex-direction: column; gap: 0.4rem; }
     .save-bar > span { max-width: 42%; }
   }
 </style>
