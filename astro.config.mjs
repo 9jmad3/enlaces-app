@@ -4,6 +4,7 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [],
-  site: process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321',
+  // Sustituir con SITE_URL en el despliegue si el dominio definitivo cambia.
+  site: process.env.SITE_URL || 'https://enlaces-app-production.up.railway.app',
+  trailingSlash: 'never',
 });
