@@ -9,6 +9,7 @@ if (!user) return Astro.redirect('/login?next=/app/cuenta');
 
 const error = Astro.url.searchParams.get('error');
 const emailUpdated = Astro.url.searchParams.get('emailUpdated');
+const emailPending = Astro.url.searchParams.get('emailPending');
 const passwordUpdated = Astro.url.searchParams.get('passwordUpdated');
 ---
 
@@ -32,6 +33,11 @@ const passwordUpdated = Astro.url.searchParams.get('passwordUpdated');
 
     {error && <p class="notice" role="alert">{error}</p>}
     {emailUpdated && <p class="notice notice--success" role="status">Correo actualizado correctamente.</p>}
+    {emailPending && (
+      <p class="notice notice--success" role="status">
+        Hemos enviado un enlace al nuevo correo. El cambio se aplicará cuando lo confirmes.
+      </p>
+    )}
     {passwordUpdated && (
       <p class="notice notice--success" role="status">
         Contraseña actualizada. Las demás sesiones se han cerrado.
@@ -44,7 +50,7 @@ const passwordUpdated = Astro.url.searchParams.get('passwordUpdated');
           <span>01</span>
           <div>
             <h2>Cambiar correo</h2>
-            <p>Tu correo se utiliza únicamente para acceder y gestionar la cuenta.</p>
+            <p>El nuevo correo no sustituirá al actual hasta que lo confirmes.</p>
           </div>
         </div>
         <form action="/api/account/email" method="post">
@@ -52,6 +58,9 @@ const passwordUpdated = Astro.url.searchParams.get('passwordUpdated');
             <label for="email">Correo electrónico</label>
             <input id="email" name="email" type="email" value={user.email} autocomplete="email" required />
           </div>
+          {user.pending_email && (
+            <p class="pending-email">Pendiente de confirmar: <strong>{user.pending_email}</strong></p>
+          )}
           <div class="field">
             <label for="emailCurrentPassword">Contraseña actual</label>
             <input
@@ -247,6 +256,15 @@ const passwordUpdated = Astro.url.searchParams.get('passwordUpdated');
     line-height: 1.55;
   }
   .account-card form, .danger-card form { display: grid; gap: 1rem; margin-top: 1.4rem; }
+  .pending-email {
+    margin: -0.25rem 0 0;
+    padding: 0.7rem;
+    border-radius: 0.65rem;
+    background: #fff7d8;
+    color: #665b3a;
+    font-size: 0.74rem;
+    line-height: 1.45;
+  }
   .account-card .button { width: fit-content; margin-top: 0.2rem; }
   .danger-card {
     display: grid;

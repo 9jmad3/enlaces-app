@@ -6,6 +6,8 @@ declare namespace App {
     user: {
       id: string;
       email: string;
+      email_verified_at: Date | null;
+      pending_email: string | null;
       profile_id: string;
       slug: string;
       display_name: string;

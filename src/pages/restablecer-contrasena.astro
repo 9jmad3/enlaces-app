@@ -1,0 +1,52 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AuthShell from '../components/AuthShell.astro';
+import { getTokenStatus } from '../lib/account-tokens.js';
+
+const token = Astro.url.searchParams.get('token') || '';
+const error = Astro.url.searchParams.get('error');
+let validToken = false;
+try {
+  validToken = Boolean(await getTokenStatus(token, ['reset_password']));
+} catch {
+  validToken = false;
+}
+---
+
+<Layout title="Nueva contraseña | Nexo" description="Crea una nueva contraseña para tu cuenta de Nexo.">
+  <AuthShell
+    title="Crea una nueva contraseña."
+    intro="Elige una contraseña nueva para volver a entrar en tu espacio."
+    alternateText="¿Necesitas otro enlace?"
+    alternateHref="/recuperar-contrasena"
+    alternateLabel="Solicitarlo"
+  >
+    {validToken ? (
+      <form class="auth-form" action="/api/auth/reset-password" method="post">
+        {error && <p class="notice" role="alert">{error}</p>}
+        <input type="hidden" name="token" value={token} />
+        <div class="field">
+          <label for="password">Nueva contraseña</label>
+          <input id="password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+        </div>
+        <div class="field">
+          <label for="passwordConfirmation">Repite la contraseña</label>
+          <input id="passwordConfirmation" name="passwordConfirmation" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+        </div>
+        <button class="button button--coral" type="submit">Guardar nueva contraseña</button>
+      </form>
+    ) : (
+      <div class="invalid-token">
+        <p class="notice" role="alert">
+          {error || 'Este enlace ha caducado, ya se ha utilizado o no es válido.'}
+        </p>
+        <a class="button" href="/recuperar-contrasena">Solicitar otro enlace</a>
+      </div>
+    )}
+  </AuthShell>
+</Layout>
+
+<style>
+  .invalid-token { display: grid; gap: 1rem; }
+  .invalid-token .button { width: fit-content; }
+</style>

@@ -1,4 +1,9 @@
-import { updateUserEmail, verifyUserPassword } from '../../../lib/auth.js';
+import { verifyUserPassword } from '../../../lib/auth.js';
+import { beginEmailChange } from '../../../lib/account-tokens.js';
+import {
+  isEmailDeliveryConfigured,
+  sendVerificationEmail,
+} from '../../../lib/email.js';
 import { normalizeEmail, validEmail } from '../../../lib/validation.js';
 import { getClientIp, isRateLimited, sameOrigin } from '../../../lib/security.js';
 
@@ -13,6 +18,9 @@ export async function POST({ request, locals, redirect }) {
     return new Response('Solicitud no permitida', { status: 403 });
   }
   if (!locals.user) return redirect('/login?next=/app/cuenta');
+  if (!isEmailDeliveryConfigured()) {
+    return redirect(accountError('El envío de correo todavía no está configurado.'));
+  }
 
   const ip = getClientIp(request);
   if (await isRateLimited(`account-email:${locals.user.id}:${ip}`, {
@@ -41,10 +49,16 @@ export async function POST({ request, locals, redirect }) {
       return redirect(accountError('Ese correo ya está asociado a tu cuenta.'));
     }
 
-    await updateUserEmail(locals.user.id, email);
-    return redirect('/app/cuenta?emailUpdated=1');
+    const token = await beginEmailChange(locals.user.id, email);
+    await sendVerificationEmail({
+      email,
+      displayName: locals.user.display_name,
+      token,
+      isEmailChange: true,
+    });
+    return redirect('/app/cuenta?emailPending=1');
   } catch (error) {
-    if (error?.code === '23505') {
+    if (error?.code === '23505' || error?.code === 'EMAIL_TAKEN') {
       return redirect(accountError('Ese correo ya está asociado a otra cuenta.'));
     }
     console.error('No se pudo actualizar el correo', error);

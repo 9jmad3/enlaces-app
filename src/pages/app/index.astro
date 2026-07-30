@@ -17,6 +17,10 @@ const links = Array.from({ length: 6 }, (_, index) => (
 const error = Astro.url.searchParams.get('error');
 const saved = Astro.url.searchParams.get('saved');
 const welcome = Astro.url.searchParams.get('welcome');
+const verify = Astro.url.searchParams.get('verify');
+const verified = Astro.url.searchParams.get('verified');
+const verificationSent = Astro.url.searchParams.get('verificationSent');
+const passwordReset = Astro.url.searchParams.get('passwordReset');
 const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:${profile.accent_color};--preview-text:${profile.text_color}`;
 ---
 
@@ -43,6 +47,26 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
       {error && <p class="notice" role="alert">{error}</p>}
       {saved && <p class="notice notice--success">Cambios guardados y publicados.</p>}
       {welcome && <p class="notice notice--success">Tu página ya existe. Ahora dale tu estilo.</p>}
+      {verified && <p class="notice notice--success">Correo verificado. Ya puedes publicar tu página.</p>}
+      {verificationSent && <p class="notice notice--success">Te hemos enviado un nuevo enlace de verificación.</p>}
+      {passwordReset && <p class="notice notice--success">Contraseña actualizada y sesiones anteriores cerradas.</p>}
+
+      {!user.email_verified_at && (
+        <section class="verify-card">
+          <div>
+            <p class="eyebrow">Protege tu cuenta</p>
+            <h2>Confirma tu correo</h2>
+            <p>
+              Hemos enviado un enlace a <strong>{user.email}</strong>. Confírmalo para poder
+              publicar tu página.
+            </p>
+            {verify && <small>Si no lo encuentras, revisa la carpeta de spam.</small>}
+          </div>
+          <form action="/api/auth/resend-verification" method="post">
+            <button class="button" type="submit">Reenviar correo</button>
+          </form>
+        </section>
+      )}
 
       <section class="editor-card">
         <div class="section-title">
@@ -501,6 +525,20 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
     background: var(--surface);
     box-shadow: 0 10px 35px rgba(36, 43, 40, 0.035);
   }
+  .verify-card {
+    display: flex;
+    padding: 1.3rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.2rem;
+    border: 1px solid #e3bf63;
+    border-radius: 1.2rem;
+    background: #fff7d8;
+  }
+  .verify-card h2 { margin: 0.6rem 0 0.25rem; font-family: var(--font-display); font-size: 1.55rem; }
+  .verify-card p:not(.eyebrow) { margin: 0; color: #665b3a; font-size: 0.8rem; line-height: 1.55; }
+  .verify-card small { display: block; margin-top: 0.4rem; color: #7a704d; font-size: 0.7rem; }
+  .verify-card .button { white-space: nowrap; }
   .editor-card { display: grid; gap: 1.25rem; }
   .section-title { display: flex; align-items: flex-start; gap: 0.9rem; }
   .section-title > span {
@@ -767,5 +805,6 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
     .avatar-uploader__preview { width: 4.4rem; height: 4.4rem; }
     .avatar-uploader__action { align-items: flex-start; flex-direction: column; gap: 0.4rem; }
     .save-bar > span { max-width: 42%; }
+    .verify-card { align-items: flex-start; flex-direction: column; }
   }
 </style>

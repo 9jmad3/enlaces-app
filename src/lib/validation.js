@@ -22,6 +22,7 @@ export const RESERVED_SLUGS = new Set([
   'forgot-password',
   'recuperar-contrasena',
   'reset-password',
+  'restablecer-contrasena',
   'verify-email',
   'verificar-correo',
 

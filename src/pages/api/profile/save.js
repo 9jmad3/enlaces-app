@@ -64,6 +64,10 @@ export async function POST({ request, locals, redirect }) {
   links.sort((first, second) => first.position - second.position);
 
   try {
+    if (form.get('published') === 'on' && !locals.user.email_verified_at) {
+      return redirect(panelError('Verifica tu correo antes de publicar la página.'));
+    }
+
     const avatar = await parseAvatarUpload(form.get('avatar'));
     if (!(await isSlugAvailable(slug, locals.user.id))) {
       return redirect(panelError('Ese nombre de usuario ya esta ocupado.'));

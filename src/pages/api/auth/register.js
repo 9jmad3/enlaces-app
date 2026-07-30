@@ -12,6 +12,11 @@ import {
   validateSlug,
 } from '../../../lib/validation.js';
 import { getClientIp, isRateLimited, sameOrigin } from '../../../lib/security.js';
+import { createEmailVerificationToken } from '../../../lib/account-tokens.js';
+import {
+  isEmailDeliveryConfigured,
+  sendVerificationEmail,
+} from '../../../lib/email.js';
 
 export const prerender = false;
 
@@ -63,10 +68,27 @@ export async function POST({ request, cookies, redirect }) {
       return redirect(redirectWithError('Ese usuario ya esta en uso.'));
     }
 
-    const account = await createAccount({ email, password, slug, displayName });
+    const emailConfigured = isEmailDeliveryConfigured();
+    const account = await createAccount({
+      email,
+      password,
+      slug,
+      displayName,
+      emailVerified: !emailConfigured,
+    });
+
+    if (emailConfigured) {
+      const token = await createEmailVerificationToken(account.userId);
+      try {
+        await sendVerificationEmail({ email, displayName, token });
+      } catch (emailError) {
+        console.error('No se pudo enviar la verificacion inicial', emailError);
+      }
+    }
+
     const session = await createSession(account.userId);
     setSessionCookie(cookies, session);
-    return redirect('/app?welcome=1');
+    return redirect(emailConfigured ? '/app?welcome=1&verify=1' : '/app?welcome=1');
   } catch (error) {
     if (error?.code === '23505') {
       const field = error.constraint?.includes('email') ? 'correo' : 'usuario';

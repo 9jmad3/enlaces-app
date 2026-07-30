@@ -11,6 +11,7 @@ perfil en `/<usuario>`.
 - PostgreSQL
 - Sesiones persistentes con cookies seguras
 - `bcryptjs` para el hash de contrasenas
+- Resend para verificación de correo y recuperación de contraseña
 
 ## Desarrollo local
 
@@ -41,6 +42,19 @@ funcionando. El registro y el panel requieren PostgreSQL.
 5. Si la conexion de PostgreSQL no usa SSL, configura `DATABASE_SSL=false`.
 6. Railway detectara `npm run build` y arrancara con `npm run start`.
 7. Puedes usar `/api/health` como healthcheck.
+
+## Correo transaccional
+
+La verificación de correo, los cambios de dirección confirmados y la recuperación
+de contraseña se activan al configurar estas variables:
+
+- `RESEND_API_KEY`: clave privada de Resend.
+- `EMAIL_FROM`: remitente de un dominio verificado, por ejemplo
+  `Nexo <cuenta@tudominio.es>`.
+- `SITE_URL`: dominio público completo usado en los enlaces de los correos.
+
+Sin estas variables, el registro sigue funcionando y las cuentas nuevas se
+consideran verificadas para no bloquear el servicio.
 
 No se usa `astro preview` en produccion y no hace falta configurar
 `preview.allowedHosts`.

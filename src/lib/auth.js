@@ -10,7 +10,13 @@ function hashToken(token) {
   return createHash('sha256').update(token).digest('hex');
 }
 
-export async function createAccount({ email, password, slug, displayName }) {
+export async function createAccount({
+  email,
+  password,
+  slug,
+  displayName,
+  emailVerified = false,
+}) {
   const userId = randomUUID();
   const profileId = randomUUID();
   const passwordHash = await bcrypt.hash(password, 12);
@@ -18,14 +24,14 @@ export async function createAccount({ email, password, slug, displayName }) {
   await transaction(async (client) => {
     await client.query(
       `INSERT INTO users
-        (id, email, password_hash, terms_accepted_at, terms_version)
-       VALUES ($1, $2, $3, NOW(), $4)`,
-      [userId, email, passwordHash, TERMS_VERSION],
+        (id, email, password_hash, terms_accepted_at, terms_version, email_verified_at)
+       VALUES ($1, $2, $3, NOW(), $4, $5)`,
+      [userId, email, passwordHash, TERMS_VERSION, emailVerified ? new Date() : null],
     );
     await client.query(
       `INSERT INTO profiles
-        (id, user_id, slug, display_name, tagline, bio)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+        (id, user_id, slug, display_name, tagline, bio, published)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         profileId,
         userId,
@@ -33,6 +39,7 @@ export async function createAccount({ email, password, slug, displayName }) {
         displayName,
         'Mi espacio, mis enlaces.',
         'Encuentra aqui todo lo que comparto.',
+        emailVerified,
       ],
     );
   });
@@ -59,13 +66,6 @@ export async function verifyUserPassword(userId, password) {
   );
   const user = result.rows[0];
   return Boolean(user && await bcrypt.compare(password, user.password_hash));
-}
-
-export async function updateUserEmail(userId, email) {
-  await query(
-    'UPDATE users SET email = $1, updated_at = NOW() WHERE id = $2',
-    [email, userId],
-  );
 }
 
 export async function updateUserPassword(userId, password) {
@@ -114,6 +114,8 @@ export async function getSessionUser(token) {
     `SELECT
        u.id,
        u.email,
+       u.email_verified_at,
+       u.pending_email,
        p.id AS profile_id,
        p.slug,
        p.display_name

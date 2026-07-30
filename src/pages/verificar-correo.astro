@@ -1,0 +1,35 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AuthShell from '../components/AuthShell.astro';
+import { getTokenStatus } from '../lib/account-tokens.js';
+
+const token = Astro.url.searchParams.get('token') || '';
+const error = Astro.url.searchParams.get('error');
+let validToken = false;
+try {
+  validToken = Boolean(await getTokenStatus(token, ['verify_email', 'verify_email_change']));
+} catch {
+  validToken = false;
+}
+---
+
+<Layout title="Verificar correo | Nexo" description="Confirma tu dirección de correo de Nexo.">
+  <AuthShell
+    title="Confirma tu correo."
+    intro="Una última comprobación para proteger tu cuenta y poder publicar tu página."
+    alternateText="¿Ya lo has confirmado?"
+    alternateHref="/login"
+    alternateLabel="Entrar"
+  >
+    {validToken ? (
+      <form class="auth-form" action="/api/auth/verify-email" method="post">
+        <input type="hidden" name="token" value={token} />
+        <button class="button button--coral" type="submit">Confirmar mi correo</button>
+      </form>
+    ) : (
+      <p class="notice" role="alert">
+        {error || 'Este enlace ha caducado, ya se ha utilizado o no es válido.'}
+      </p>
+    )}
+  </AuthShell>
+</Layout>

@@ -7,7 +7,15 @@ import {
 } from '../src/lib/validation.js';
 
 test('reserves application routes and protected identities', () => {
-  for (const slug of ['app', 'api', 'aviso-legal', 'admin', 'nexo', 'paypal']) {
+  for (const slug of [
+    'app',
+    'api',
+    'aviso-legal',
+    'restablecer-contrasena',
+    'admin',
+    'nexo',
+    'paypal',
+  ]) {
     assert.equal(
       validateSlug(slug),
       'Ese nombre está reservado por Nexo.',
