@@ -25,10 +25,9 @@ interface Profile {
 
 interface Props {
   profile: Profile;
-  paypalUrl?: string;
 }
 
-const { profile, paypalUrl = '' }: Props = Astro.props;
+const { profile }: Props = Astro.props;
 const isPulse = profile.template_id === 'pulse';
 const initials = profile.display_name
   .split(/\s+/)
@@ -75,11 +74,6 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
   <footer class="profile-footer">
     <a class="made-with" href="/"><span>N</span> Hecho con Nexo</a>
     <div>
-      {paypalUrl && (
-        <a class="support-link" href={paypalUrl} target="_blank" rel="noopener noreferrer">
-          <span aria-hidden="true">☕</span> Invítame a un café
-        </a>
-      )}
       <a href="/registro">Crea el tuyo</a>
     </div>
   </footer>
@@ -255,19 +249,6 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
   }
   .profile-footer a { text-underline-offset: 0.2rem; }
   .profile-footer > div { display: flex; gap: 0.8rem; }
-  .profile-footer .support-link {
-    display: inline-flex;
-    min-height: 2rem;
-    margin-top: -0.4rem;
-    padding: 0.4rem 0.7rem;
-    align-items: center;
-    gap: 0.3rem;
-    border-radius: 999px;
-    background: var(--profile-accent);
-    color: var(--profile-bg);
-    text-decoration: none;
-    font-weight: 850;
-  }
   .made-with { display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none; font-weight: 750; }
   .made-with span {
     display: grid;
