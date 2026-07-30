@@ -69,6 +69,20 @@ export async function getEditableProfile(userId) {
 }
 
 export async function isSlugAvailable(slug, excludeUserId = '') {
+  const isFallbackSlug = fallbackProfiles.some(
+    (profile) => profile.slug.toLowerCase() === slug.toLowerCase(),
+  );
+
+  if (isFallbackSlug) {
+    if (!excludeUserId) return false;
+
+    const ownedFallback = await query(
+      'SELECT 1 FROM profiles WHERE slug = $1 AND user_id = $2 LIMIT 1',
+      [slug, excludeUserId],
+    );
+    return ownedFallback.rowCount > 0;
+  }
+
   const result = excludeUserId
     ? await query(
         'SELECT 1 FROM profiles WHERE slug = $1 AND user_id <> $2 LIMIT 1',
