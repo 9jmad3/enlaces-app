@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { hasDatabase, query, transaction } from './db.js';
 import { profiles as fallbackProfiles } from '../data/profiles.js';
+import { normalizeTemplateId } from './templates.js';
 import { safeUrl, validHex } from './validation.js';
 
 function mapFallback(profile) {
@@ -191,7 +192,7 @@ export async function saveProfile(userId, data) {
         data.tagline.slice(0, 100),
         data.bio.slice(0, 280),
         safeUrl(avatarUrl, { allowRelative: true }),
-        ['studio', 'pulse'].includes(data.templateId) ? data.templateId : 'studio',
+        normalizeTemplateId(data.templateId),
         validHex(data.backgroundColor, '#F3EFE7'),
         validHex(data.accentColor, '#E65336'),
         validHex(data.textColor, '#18201D'),

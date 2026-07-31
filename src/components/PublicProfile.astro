@@ -18,7 +18,7 @@ interface Profile {
   tagline: string;
   bio: string;
   avatar_url: string;
-  template_id: 'studio' | 'pulse';
+  template_id: 'studio' | 'pulse' | 'aura' | 'frame';
   background_color: string;
   accent_color: string;
   text_color: string;
@@ -31,6 +31,8 @@ interface Props {
 
 const { profile }: Props = Astro.props;
 const isPulse = profile.template_id === 'pulse';
+const isAura = profile.template_id === 'aura';
+const isFrame = profile.template_id === 'frame';
 const isOwner = Astro.locals.user?.id === profile.user_id;
 const canReport = !isOwner && !profile.id.startsWith('fallback-');
 const reported = Astro.url.searchParams.has('reported');
@@ -45,7 +47,14 @@ const initials = profile.display_name
 const style = `--profile-bg:${profile.background_color};--profile-accent:${profile.accent_color};--profile-text:${profile.text_color}`;
 ---
 
-<main class:list={['profile-page', { 'profile-page--pulse': isPulse }]} style={style}>
+<main class:list={[
+  'profile-page',
+  {
+    'profile-page--pulse': isPulse,
+    'profile-page--aura': isAura,
+    'profile-page--frame': isFrame,
+  },
+]} style={style}>
   {reported && <p class="report-notice report-notice--success" role="status">Denuncia recibida. Gracias por ayudarnos a cuidar Trazli.</p>}
   {reportError && <p class="report-notice" role="alert">No hemos podido enviar la denuncia. Revisa los datos e inténtalo de nuevo.</p>}
   {reportLimited && <p class="report-notice" role="alert">Has alcanzado el límite de denuncias. Puedes escribir a hola@trazli.com si es urgente.</p>}
@@ -474,10 +483,211 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
   }
   .profile-page--pulse .link-number { color: var(--profile-text); }
   .profile-page--pulse .link-arrow { background: var(--profile-text); color: var(--profile-bg); }
+
+  .profile-page--aura {
+    background:
+      radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--profile-accent) 42%, transparent) 0 10rem, transparent 23rem),
+      radial-gradient(circle at 92% 72%, color-mix(in srgb, var(--profile-accent) 28%, white 10%) 0 8rem, transparent 22rem),
+      linear-gradient(145deg, color-mix(in srgb, var(--profile-bg) 86%, white), var(--profile-bg));
+  }
+  .profile-page--aura::before {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 20%, color-mix(in srgb, white 16%, transparent) 50%, transparent 78%);
+    content: '';
+    pointer-events: none;
+  }
+  .profile-page--aura .profile-card {
+    margin-block: auto 1.5rem;
+    padding: clamp(1.4rem, 6vw, 2.5rem);
+    border: 1px solid color-mix(in srgb, white 55%, var(--profile-text) 10%);
+    border-radius: 2.2rem;
+    background: color-mix(in srgb, var(--profile-bg) 68%, transparent);
+    box-shadow:
+      0 30px 80px color-mix(in srgb, var(--profile-text) 15%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 75%, transparent);
+    backdrop-filter: blur(24px) saturate(1.25);
+  }
+  .profile-page--aura .profile-card__decor {
+    top: -5rem;
+    right: -4rem;
+    width: 13rem;
+    height: 13rem;
+    border: 0;
+    background: var(--profile-accent);
+    filter: blur(48px);
+    opacity: 0.2;
+  }
+  .profile-page--aura header {
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+  }
+  .profile-page--aura header img,
+  .profile-page--aura .avatar-fallback {
+    width: clamp(8rem, 32vw, 10rem);
+    height: clamp(8rem, 32vw, 10rem);
+    border: 1px solid color-mix(in srgb, white 78%, var(--profile-accent));
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 0.55rem color-mix(in srgb, var(--profile-accent) 17%, transparent),
+      0 22px 55px color-mix(in srgb, var(--profile-text) 20%, transparent);
+  }
+  .profile-page--aura .identity { padding-top: 1.2rem; }
+  .profile-page--aura .handle {
+    display: inline-flex;
+    margin-bottom: 0.65rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--profile-accent) 38%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--profile-bg) 58%, transparent);
+  }
+  .profile-page--aura h1 {
+    font-size: clamp(3.2rem, 14vw, 5rem);
+    font-weight: 540;
+    line-height: 0.9;
+  }
+  .profile-page--aura .bio {
+    max-width: 28rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+  .profile-page--aura .profile-links { gap: 0.85rem; }
+  .profile-page--aura .profile-links a {
+    min-height: 4.65rem;
+    border-color: color-mix(in srgb, white 48%, var(--profile-text) 15%);
+    border-radius: 1.4rem;
+    background: color-mix(in srgb, var(--profile-bg) 55%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 65%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .profile-page--aura .profile-links a:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 18px 35px color-mix(in srgb, var(--profile-text) 12%, transparent);
+  }
+  .profile-page--aura .link-arrow {
+    background: color-mix(in srgb, var(--profile-accent) 82%, white);
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--profile-accent) 24%, transparent);
+  }
+
+  .profile-page--frame {
+    --frame-edge: color-mix(in srgb, var(--profile-text) 88%, var(--profile-bg));
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--profile-accent) 12%, transparent) 25%, transparent 25%) 0 0 / 3rem 3rem,
+      var(--profile-bg);
+  }
+  .profile-page--frame .share {
+    border: 2px solid var(--frame-edge);
+    border-radius: 0;
+    background: var(--profile-accent);
+    box-shadow: 4px 4px 0 var(--frame-edge);
+  }
+  .profile-page--frame .profile-card {
+    width: min(100%, 600px);
+    padding: 0;
+    border: 3px solid var(--frame-edge);
+    background: color-mix(in srgb, var(--profile-bg) 92%, white);
+    box-shadow: 12px 12px 0 color-mix(in srgb, var(--profile-accent) 82%, var(--frame-edge));
+  }
+  .profile-page--frame .profile-card__decor {
+    top: -1.1rem;
+    right: -1.1rem;
+    width: 4rem;
+    height: 4rem;
+    border: 0;
+    border-radius: 0;
+    background: var(--profile-accent);
+    opacity: 1;
+    clip-path: polygon(42% 0, 58% 0, 58% 42%, 100% 42%, 100% 58%, 58% 58%, 58% 100%, 42% 100%, 42% 58%, 0 58%, 0 42%, 42% 42%);
+    transform: rotate(12deg);
+  }
+  .profile-page--frame header {
+    position: relative;
+    display: block;
+    padding-bottom: 1.4rem;
+    border-bottom: 3px solid var(--frame-edge);
+  }
+  .profile-page--frame header img,
+  .profile-page--frame .avatar-fallback {
+    width: 100%;
+    height: clamp(16rem, 62vw, 22rem);
+    border: 0;
+    border-bottom: 3px solid var(--frame-edge);
+    border-radius: 0;
+    box-shadow: none;
+    object-position: center 24%;
+  }
+  .profile-page--frame .identity { padding: 1.25rem 1.25rem 0; }
+  .profile-page--frame .handle {
+    display: inline-block;
+    margin-bottom: 0.7rem;
+    padding: 0.28rem 0.5rem;
+    background: var(--profile-accent);
+    color: var(--profile-text);
+  }
+  .profile-page--frame h1 {
+    font-family: var(--font-body);
+    font-size: clamp(2.8rem, 13vw, 4.8rem);
+    font-weight: 900;
+    letter-spacing: -0.075em;
+    line-height: 0.82;
+    text-transform: uppercase;
+  }
+  .profile-page--frame .tagline {
+    max-width: 26rem;
+    margin-top: 0.9rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .profile-page--frame .bio {
+    margin: 0;
+    padding: 1.35rem 1.25rem;
+    border-bottom: 3px solid var(--frame-edge);
+    color: var(--profile-text);
+  }
+  .profile-page--frame .profile-links { gap: 0; }
+  .profile-page--frame .profile-links a {
+    min-height: 5rem;
+    padding: 0.9rem 1.25rem;
+    border: 0;
+    border-bottom: 3px solid var(--frame-edge);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .profile-page--frame .profile-links a:last-child { border-bottom: 0; }
+  .profile-page--frame .profile-links a:nth-child(even) {
+    background: color-mix(in srgb, var(--profile-accent) 24%, transparent);
+  }
+  .profile-page--frame .profile-links a:hover {
+    padding-left: 1.6rem;
+    background: var(--profile-accent);
+    box-shadow: none;
+    transform: none;
+  }
+  .profile-page--frame .profile-links strong {
+    font-size: 1rem;
+    font-weight: 850;
+    letter-spacing: -0.02em;
+  }
+  .profile-page--frame .link-arrow {
+    border: 2px solid var(--frame-edge);
+    border-radius: 0;
+    background: var(--profile-bg);
+    color: var(--profile-text);
+  }
+  .profile-page--frame .profile-footer,
+  :global(.profile-page--frame > .legal-footer) {
+    width: min(100%, 600px);
+  }
   @media (max-width: 480px) {
     .profile-page { padding-inline: 0.55rem; }
     .profile-card { padding-inline: 0.55rem; }
     header { align-items: center; }
     .profile-footer { padding-inline: 0.55rem; align-items: flex-start; gap: 0.8rem; flex-direction: column; }
+    .profile-page--aura .profile-card { padding-inline: 1rem; }
+    .profile-page--frame .profile-card { width: calc(100% - 0.85rem); }
+    .profile-page--frame .profile-footer { padding-inline: 0; }
   }
 </style>
