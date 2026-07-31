@@ -139,32 +139,56 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
               )}
             </div>
             <div class="avatar-position" data-avatar-position-controls hidden={!profile.avatar_url}>
-              <div>
+              <div class="avatar-position__heading">
                 <strong>Encuadre</strong>
-                <span>Mueve el punto focal hasta que la foto quede como quieres.</span>
+                <span>Mueve el punto focal y comprueba los tres formatos antes de guardar.</span>
               </div>
-              <label>
-                <span>Horizontal</span>
-                <input
-                  type="range"
-                  name="avatarPositionX"
-                  min="0"
-                  max="100"
-                  value={profile.avatar_position_x ?? 50}
-                  data-avatar-position="x"
-                />
-              </label>
-              <label>
-                <span>Vertical</span>
-                <input
-                  type="range"
-                  name="avatarPositionY"
-                  min="0"
-                  max="100"
-                  value={profile.avatar_position_y ?? 20}
-                  data-avatar-position="y"
-                />
-              </label>
+              <div class="avatar-crops" aria-label="Vista previa del encuadre">
+                <figure class="avatar-crop avatar-crop--portrait">
+                  <div data-avatar-crop-preview>
+                    {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
+                  </div>
+                  <figcaption>Studio</figcaption>
+                </figure>
+                <figure class="avatar-crop avatar-crop--circle">
+                  <div data-avatar-crop-preview>
+                    {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
+                  </div>
+                  <figcaption>Pulse · Aura</figcaption>
+                </figure>
+                <figure class="avatar-crop avatar-crop--frame">
+                  <div data-avatar-crop-preview>
+                    {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
+                  </div>
+                  <figcaption>Frame</figcaption>
+                </figure>
+              </div>
+              <div class="avatar-position__sliders">
+                <label>
+                  <span>Horizontal <output data-avatar-position-value="x">{profile.avatar_position_x ?? 50}%</output></span>
+                  <input
+                    type="range"
+                    name="avatarPositionX"
+                    min="0"
+                    max="100"
+                    value={profile.avatar_position_x ?? 50}
+                    data-avatar-position="x"
+                  />
+                  <small><i>Izquierda</i><i>Derecha</i></small>
+                </label>
+                <label>
+                  <span>Vertical <output data-avatar-position-value="y">{profile.avatar_position_y ?? 20}%</output></span>
+                  <input
+                    type="range"
+                    name="avatarPositionY"
+                    min="0"
+                    max="100"
+                    value={profile.avatar_position_y ?? 20}
+                    data-avatar-position="y"
+                  />
+                  <small><i>Arriba</i><i>Abajo</i></small>
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -384,6 +408,8 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   const avatarPositionControls = document.querySelector<HTMLElement>('[data-avatar-position-controls]');
   const avatarPositionX = document.querySelector<HTMLInputElement>('[data-avatar-position="x"]');
   const avatarPositionY = document.querySelector<HTMLInputElement>('[data-avatar-position="y"]');
+  const avatarPositionValueX = document.querySelector<HTMLOutputElement>('[data-avatar-position-value="x"]');
+  const avatarPositionValueY = document.querySelector<HTMLOutputElement>('[data-avatar-position-value="y"]');
   const currentAvatar = avatarUploader?.dataset.currentAvatar || '';
   let avatarObjectUrl = '';
 
@@ -403,12 +429,15 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
 
   const showAvatarPreview = (src = '') => {
     const avatar = document.querySelector<HTMLElement>('.preview-avatar');
+    const cropPreviews = document.querySelectorAll<HTMLElement>('[data-avatar-crop-preview]');
     if (!src) {
       avatar?.replaceChildren(createAvatarContent());
       uploadPreview?.replaceChildren(createAvatarContent());
+      cropPreviews.forEach((preview) => preview.replaceChildren(createAvatarContent()));
     } else {
       avatar?.replaceChildren(createAvatarContent(src));
       uploadPreview?.replaceChildren(createAvatarContent(src));
+      cropPreviews.forEach((preview) => preview.replaceChildren(createAvatarContent(src)));
     }
   };
 
@@ -419,6 +448,8 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     previewPhone?.style.setProperty('--preview-avatar-x', x);
     previewPhone?.style.setProperty('--preview-avatar-y', y);
     avatarUploader?.style.setProperty('--avatar-y', y);
+    if (avatarPositionValueX) avatarPositionValueX.value = x;
+    if (avatarPositionValueY) avatarPositionValueY.value = y;
   };
 
   avatarPositionX?.addEventListener('input', updateAvatarPosition);
@@ -740,19 +771,44 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   .avatar-position {
     display: grid;
     grid-column: 1 / -1;
-    padding: 0.85rem;
-    gap: 0.75rem;
+    padding: 1rem 0 0;
+    gap: 1rem;
     border-top: 1px solid var(--line);
-    grid-template-columns: minmax(9rem, 1fr) repeat(2, minmax(8rem, 1fr));
-    align-items: center;
   }
   .avatar-position[hidden] { display: none; }
-  .avatar-position > div { display: grid; gap: 0.18rem; }
-  .avatar-position strong { font-size: 0.75rem; }
-  .avatar-position > div span { color: var(--muted); font-size: 0.64rem; line-height: 1.4; }
-  .avatar-position label { display: grid; gap: 0.35rem; color: var(--muted); font-size: 0.62rem; font-weight: 750; }
+  .avatar-position__heading { display: grid; gap: 0.18rem; }
+  .avatar-position__heading strong { font-size: 0.82rem; }
+  .avatar-position__heading span { color: var(--muted); font-size: 0.68rem; line-height: 1.4; }
+  .avatar-crops {
+    display: grid;
+    grid-template-columns: minmax(5rem, 0.7fr) minmax(5rem, 0.7fr) minmax(9rem, 1.6fr);
+    align-items: end;
+    gap: 0.75rem;
+  }
+  .avatar-crop { display: grid; min-width: 0; margin: 0; gap: 0.4rem; }
+  .avatar-crop > div {
+    display: grid;
+    width: 100%;
+    overflow: hidden;
+    place-items: center;
+    border: 2px solid var(--ink);
+    background: var(--mint);
+    box-shadow: 4px 4px 0 color-mix(in srgb, var(--coral) 78%, var(--ink));
+  }
+  .avatar-crop img { width: 100%; height: 100%; object-fit: cover; object-position: var(--avatar-x) var(--avatar-y); }
+  .avatar-crop b { font-family: var(--font-display); font-size: 1.6rem; }
+  .avatar-crop--portrait > div { aspect-ratio: 4 / 5; border-radius: 0.8rem 0.8rem 0.8rem 0.2rem; }
+  .avatar-crop--circle > div { aspect-ratio: 1; border-radius: 50%; }
+  .avatar-crop--frame > div { aspect-ratio: 16 / 10; border-radius: 0.2rem; }
+  .avatar-crop figcaption { color: var(--muted); text-align: center; font-size: 0.58rem; font-weight: 800; }
+  .avatar-position__sliders { display: grid; padding: 0.9rem; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; border-radius: 0.8rem; background: white; }
+  .avatar-position label { display: grid; gap: 0.4rem; color: var(--muted); font-size: 0.65rem; font-weight: 750; }
+  .avatar-position label > span { display: flex; justify-content: space-between; }
+  .avatar-position output { color: var(--coral); font-weight: 900; }
   .avatar-position input { width: 100%; accent-color: var(--coral); cursor: grab; }
   .avatar-position input:active { cursor: grabbing; }
+  .avatar-position label small { display: flex; justify-content: space-between; color: #939b97; font-size: 0.54rem; font-weight: 500; }
+  .avatar-position label small i { font-style: normal; }
   .template-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .template-option { cursor: pointer; }
   .template-option input { position: absolute; opacity: 0; pointer-events: none; }
@@ -1051,7 +1107,8 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     .avatar-uploader { grid-template-columns: 4.4rem minmax(0, 1fr); padding: 0.75rem; gap: 0.75rem; }
     .avatar-uploader__preview { width: 4.4rem; height: 4.4rem; }
     .avatar-uploader__action { align-items: flex-start; flex-direction: column; gap: 0.4rem; }
-    .avatar-position { grid-template-columns: 1fr; }
+    .avatar-crops { grid-template-columns: 0.75fr 0.75fr 1.5fr; gap: 0.5rem; }
+    .avatar-position__sliders { grid-template-columns: 1fr; }
     .save-bar > span { max-width: 42%; }
     .verify-card { align-items: flex-start; flex-direction: column; }
   }
