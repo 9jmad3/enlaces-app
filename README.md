@@ -50,7 +50,7 @@ de contraseña se activan al configurar estas variables:
 
 - `RESEND_API_KEY`: clave privada de Resend.
 - `EMAIL_FROM`: remitente de un dominio verificado, por ejemplo
-  `Trazli <cuenta@tudominio.es>`.
+  `Trazli <hola@trazli.com>`.
 - `SITE_URL`: dominio público completo usado en los enlaces de los correos.
 
 Sin estas variables, el registro sigue funcionando y las cuentas nuevas se
