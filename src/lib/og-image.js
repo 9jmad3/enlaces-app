@@ -98,17 +98,31 @@ function vectorTextLines(lines, options) {
   })).join('');
 }
 
-async function prepareAvatar(avatar, circular = false) {
+async function prepareAvatar(avatar, circular = false, focalPoint = { x: 50, y: 20 }) {
   if (!avatar?.content) return null;
 
   try {
+    const normalized = await sharp(avatar.content)
+      .rotate()
+      .toBuffer({ resolveWithObject: true });
+    const width = normalized.info.width;
+    const height = normalized.info.height;
+    const cropSize = Math.min(width, height);
+    const left = Math.max(0, Math.min(
+      width - cropSize,
+      Math.round((width * focalPoint.x / 100) - (cropSize / 2)),
+    ));
+    const top = Math.max(0, Math.min(
+      height - cropSize,
+      Math.round((height * focalPoint.y / 100) - (cropSize / 2)),
+    ));
     const mask = Buffer.from(
       `<svg width="270" height="270"><rect width="270" height="270" rx="${circular ? 135 : 54}" fill="white"/></svg>`,
     );
 
-    return await sharp(avatar.content)
-      .rotate()
-      .resize(270, 270, { fit: 'cover', position: 'attention' })
+    return await sharp(normalized.data)
+      .extract({ left, top, width: cropSize, height: cropSize })
+      .resize(270, 270)
       .composite([{ input: mask, blend: 'dest-in' }])
       .png()
       .toBuffer();
@@ -134,7 +148,10 @@ export async function renderProfileOgImage(profile, avatar = null) {
   const nameY = nameLines.length > 1 ? 232 : 270;
   const taglineY = nameLines.length > 1 ? 390 : 335;
   const taglineLines = wrapText(tagline);
-  const avatarImage = await prepareAvatar(avatar, pulse);
+  const avatarImage = await prepareAvatar(avatar, pulse, {
+    x: Number(profile.avatar_position_x ?? 50),
+    y: Number(profile.avatar_position_y ?? 20),
+  });
   const avatarFallback = initials(displayName);
 
   const decoration = pulse

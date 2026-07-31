@@ -18,6 +18,8 @@ interface Profile {
   tagline: string;
   bio: string;
   avatar_url: string;
+  avatar_position_x: number;
+  avatar_position_y: number;
   template_id: 'studio' | 'pulse' | 'aura' | 'frame';
   background_color: string;
   accent_color: string;
@@ -44,7 +46,7 @@ const initials = profile.display_name
   .map((part) => part[0])
   .join('')
   .toUpperCase();
-const style = `--profile-bg:${profile.background_color};--profile-accent:${profile.accent_color};--profile-text:${profile.text_color}`;
+const style = `--profile-bg:${profile.background_color};--profile-accent:${profile.accent_color};--profile-text:${profile.text_color};--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:${profile.avatar_position_y ?? 20}%`;
 ---
 
 <main class:list={[
@@ -262,7 +264,7 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     border-radius: 1.5rem 1.5rem 1.5rem 0.35rem;
     box-shadow: 0 18px 40px color-mix(in srgb, var(--profile-text) 18%, transparent);
     object-fit: cover;
-    object-position: center top;
+    object-position: var(--avatar-x) var(--avatar-y);
   }
   .avatar-fallback {
     display: grid;
@@ -615,7 +617,7 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     border-bottom: 3px solid var(--frame-edge);
     border-radius: 0;
     box-shadow: none;
-    object-position: center 24%;
+    object-position: var(--avatar-x) var(--avatar-y);
   }
   .profile-page--frame .identity { padding: 1.25rem 1.25rem 0; }
   .profile-page--frame .handle {

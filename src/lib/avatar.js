@@ -1,9 +1,15 @@
 import { createHash } from 'node:crypto';
+import sharp from 'sharp';
 
-export const MAX_AVATAR_BYTES = 3 * 1024 * 1024;
+export const MAX_AVATAR_BYTES = 12 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 export class AvatarUploadError extends Error {}
+
+export function normalizeAvatarPosition(value, fallback = 50) {
+  const position = Number.parseInt(String(value), 10);
+  return Number.isFinite(position) ? Math.min(100, Math.max(0, position)) : fallback;
+}
 
 function matchesFileSignature(bytes, contentType) {
   if (contentType === 'image/jpeg') {
@@ -34,7 +40,7 @@ export async function parseAvatarUpload(file) {
   }
 
   if (file.size > MAX_AVATAR_BYTES) {
-    throw new AvatarUploadError('La foto no puede superar los 3 MB.');
+    throw new AvatarUploadError('La foto no puede superar los 12 MB.');
   }
 
   const content = Buffer.from(await file.arrayBuffer());
@@ -42,9 +48,24 @@ export async function parseAvatarUpload(file) {
     throw new AvatarUploadError('El archivo seleccionado no es una imagen valida.');
   }
 
-  return {
-    content,
-    contentType: file.type,
-    etag: createHash('sha256').update(content).digest('hex'),
-  };
+  try {
+    const optimizedContent = await sharp(content, { limitInputPixels: 80_000_000 })
+      .rotate()
+      .resize({
+        width: 1800,
+        height: 1800,
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 86, effort: 4 })
+      .toBuffer();
+
+    return {
+      content: optimizedContent,
+      contentType: 'image/webp',
+      etag: createHash('sha256').update(optimizedContent).digest('hex'),
+    };
+  } catch {
+    throw new AvatarUploadError('No hemos podido procesar esta imagen. Prueba con otra foto.');
+  }
 }

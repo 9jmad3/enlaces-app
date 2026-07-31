@@ -1,5 +1,10 @@
 import { isSlugAvailable, saveProfile } from '../../../lib/profiles.js';
-import { AvatarUploadError, parseAvatarUpload } from '../../../lib/avatar.js';
+import {
+  AvatarUploadError,
+  MAX_AVATAR_BYTES,
+  normalizeAvatarPosition,
+  parseAvatarUpload,
+} from '../../../lib/avatar.js';
 import { normalizeSlug, safeUrl, validateSlug } from '../../../lib/validation.js';
 import { sameOrigin } from '../../../lib/security.js';
 
@@ -16,8 +21,8 @@ export async function POST({ request, locals, redirect }) {
   }
 
   const contentLength = Number(request.headers.get('content-length') || 0);
-  if (contentLength > 4 * 1024 * 1024) {
-    return redirect(panelError('La foto no puede superar los 3 MB.'));
+  if (contentLength > MAX_AVATAR_BYTES + 1024 * 1024) {
+    return redirect(panelError('La foto no puede superar los 12 MB.'));
   }
 
   const form = await request.formData();
@@ -80,6 +85,8 @@ export async function POST({ request, locals, redirect }) {
       bio,
       avatar,
       removeAvatar: form.get('removeAvatar') === 'on',
+      avatarPositionX: normalizeAvatarPosition(form.get('avatarPositionX'), 50),
+      avatarPositionY: normalizeAvatarPosition(form.get('avatarPositionY'), 20),
       templateId: String(form.get('templateId') || 'studio'),
       backgroundColor: String(form.get('backgroundColor') || ''),
       accentColor: String(form.get('accentColor') || ''),
