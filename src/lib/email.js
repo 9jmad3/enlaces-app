@@ -3,7 +3,11 @@ import { createHash } from 'node:crypto';
 const resendApiUrl = 'https://api.resend.com/emails';
 
 export function isEmailDeliveryConfigured() {
-  return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+  return Boolean(
+    process.env.RESEND_API_KEY
+      && process.env.EMAIL_FROM
+      && process.env.EMAIL_REPLY_TO,
+  );
 }
 
 function getSiteUrl() {
@@ -46,6 +50,7 @@ export async function sendEmail({ to, subject, html, text, idempotencyKey }) {
     },
     body: JSON.stringify({
       from: process.env.EMAIL_FROM,
+      reply_to: process.env.EMAIL_REPLY_TO,
       to: [to],
       subject,
       html,
