@@ -1,5 +1,6 @@
 ﻿---
 import "../css/app.css";
+import { SOCIAL_IMAGE_VERSION } from '../const';
 interface Props {
   title: string;
   description: string;
@@ -12,7 +13,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url);
 const {
   title,
   description,
-  image = '/api/og/site.png',
+  image = `/api/og/site.png?v=${SOCIAL_IMAGE_VERSION}`,
   imageAlt = `${title} en Trazli`,
   noindex = false,
 } = Astro.props;

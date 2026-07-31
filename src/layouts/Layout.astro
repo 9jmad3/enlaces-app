@@ -1,11 +1,11 @@
 ﻿---
-import { SITE_TITLE, SITE_DESCRIPTION } from '../const';
+import { SITE_TITLE, SITE_DESCRIPTION, SOCIAL_IMAGE_VERSION } from '../const';
 import BaseHead from '../components/BaseHead.astro';
 
 const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
-  image = "/api/og/site.png",
+  image = `/api/og/site.png?v=${SOCIAL_IMAGE_VERSION}`,
   imageAlt = `${title} en Trazli`,
   noindex = false,
   bodyClass = "",

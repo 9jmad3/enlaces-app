@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PublicProfile from '../components/PublicProfile.astro';
+import { SOCIAL_IMAGE_VERSION } from '../const';
 import { getPublicProfile } from '../lib/profiles.js';
 
 export const prerender = false;
@@ -10,12 +11,13 @@ const profile = await getPublicProfile(slug);
 
 if (!profile) Astro.response.status = 404;
 
-const imageVersion = profile?.updated_at
-  ? `?v=${new Date(profile.updated_at).getTime()}`
-  : '';
+const imageVersion = new URLSearchParams({
+  card: SOCIAL_IMAGE_VERSION,
+  ...(profile?.updated_at ? { v: String(new Date(profile.updated_at).getTime()) } : {}),
+});
 const socialImage = profile
-  ? `/api/og/${encodeURIComponent(profile.slug)}.png${imageVersion}`
-  : '/api/og/site.png';
+  ? `/api/og/${encodeURIComponent(profile.slug)}.png?${imageVersion}`
+  : `/api/og/site.png?v=${SOCIAL_IMAGE_VERSION}`;
 ---
 
 {profile ? (
