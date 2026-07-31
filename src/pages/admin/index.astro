@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { getAdminOverview } from '../../lib/admin.js';
 import { getModerationDashboard, isAdmin, REPORT_REASONS } from '../../lib/moderation.js';
 
 export const prerender = false;
@@ -28,13 +29,94 @@ interface ModerationReport {
   owner_notification_error: string | null;
 }
 
+interface AdminMetrics {
+  users_total: number;
+  users_verified: number;
+  users_last_7_days: number;
+  users_last_30_days: number;
+  profiles_total: number;
+  profiles_published: number;
+  profiles_suspended: number;
+  links_active: number;
+}
+
+interface RegistrationMetric {
+  day: string;
+  registrations: number;
+}
+
+interface TemplateMetric {
+  template_id: string;
+  profiles: number;
+}
+
+interface AdminAccount {
+  id: string;
+  email: string;
+  email_verified_at: string | null;
+  pending_email: string | null;
+  created_at: string;
+  slug: string | null;
+  display_name: string | null;
+  template_id: string | null;
+  published: boolean | null;
+  suspended_at: string | null;
+  updated_at: string | null;
+  links: number;
+  reports: number;
+}
+
+interface AdminOverview {
+  metrics: AdminMetrics;
+  registrations: RegistrationMetric[];
+  templates: TemplateMetric[];
+  users: AdminAccount[];
+  directory: {
+    search: string;
+    page: number;
+    pageSize: number;
+    totalUsers: number;
+    totalPages: number;
+  };
+}
+
 const user = Astro.locals.user;
 if (!user) return Astro.redirect('/login?next=/admin');
 if (!isAdmin(user)) return new Response('No encontrado', { status: 404 });
 
-const dashboard = await getModerationDashboard();
+const search = Astro.url.searchParams.get('q') || '';
+const requestedPage = Astro.url.searchParams.get('page') || '1';
+const [dashboard, rawOverview] = await Promise.all([
+  getModerationDashboard(),
+  getAdminOverview({ search, page: Number.parseInt(requestedPage, 10) || 1 }),
+]);
+const overview = rawOverview as AdminOverview;
 const reports = dashboard.reports as ModerationReport[];
 const counts = dashboard.counts;
+const metrics = overview.metrics;
+const registrations = overview.registrations;
+const templates = overview.templates;
+const directory = overview.directory;
+const adminUsers = overview.users;
+const maxRegistrations = Math.max(1, ...registrations.map((item) => item.registrations));
+const totalTemplateProfiles = Math.max(
+  1,
+  templates.reduce((total, item) => total + item.profiles, 0),
+);
+const templateLabels = {
+  studio: 'Studio',
+  pulse: 'Pulse',
+  aura: 'Aura',
+  frame: 'Frame',
+};
+const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short' });
+const dateTimeFormatter = new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+const pageHref = (page: number) => {
+  const params = new URLSearchParams();
+  if (directory.search) params.set('q', directory.search);
+  params.set('page', String(page));
+  return `/admin?${params}`;
+};
 const updated = Astro.url.searchParams.has('updated');
 const error = Astro.url.searchParams.has('error');
 const limited = Astro.url.searchParams.has('limited');
@@ -49,14 +131,16 @@ const statusLabels = {
 ---
 
 <Layout
-  title="Moderación | Trazli"
-  description="Panel privado de moderación de Trazli."
+  title="Administración | Trazli"
+  description="Panel privado de administración de Trazli."
   noindex
 >
   <header class="admin-header">
     <a class="brand" href="/"><span>T</span>Trazli</a>
     <nav aria-label="Administración">
-      <strong>Moderación</strong>
+      <a href="#resumen">Resumen</a>
+      <a href="#usuarios">Usuarios</a>
+      <a href="#moderacion">Moderación</a>
       <a href="/app">Mi panel</a>
     </nav>
   </header>
@@ -65,9 +149,9 @@ const statusLabels = {
     <div class="moderation__heading">
       <div>
         <p class="eyebrow">Panel privado</p>
-        <h1>Contenido y seguridad.</h1>
+        <h1>Todo Trazli,<br />de un vistazo.</h1>
       </div>
-      <p>Revisa cada caso antes de ocultar un perfil. Todas las acciones quedan registradas.</p>
+      <p>Consulta el crecimiento, revisa usuarios y gestiona las denuncias desde un único lugar.</p>
     </div>
 
     {updated && <p class="notice notice--success" role="status">Acción guardada.</p>}
@@ -84,14 +168,184 @@ const statusLabels = {
       </p>
     )}
 
-    <section class="stats" aria-label="Resumen">
-      <article><strong>{counts.pending}</strong><span>Pendientes</span></article>
-      <article><strong>{counts.suspended}</strong><span>Perfiles ocultos</span></article>
-      <article><strong>{counts.actioned}</strong><span>Con acción</span></article>
-      <article><strong>{counts.total}</strong><span>Total</span></article>
+    <section class="stats" id="resumen" aria-label="Resumen de Trazli">
+      <article class="stat stat--primary">
+        <span>Usuarios</span>
+        <strong>{metrics.users_total}</strong>
+        <small>+{metrics.users_last_7_days} esta semana</small>
+      </article>
+      <article>
+        <span>Perfiles publicados</span>
+        <strong>{metrics.profiles_published}</strong>
+        <small>de {metrics.profiles_total} perfiles</small>
+      </article>
+      <article>
+        <span>Correos verificados</span>
+        <strong>{metrics.users_verified}</strong>
+        <small>{metrics.users_total ? Math.round((metrics.users_verified / metrics.users_total) * 100) : 0}% del total</small>
+      </article>
+      <article>
+        <span>Enlaces activos</span>
+        <strong>{metrics.links_active}</strong>
+        <small>visibles públicamente</small>
+      </article>
     </section>
 
-    <section class="report-list">
+    <section class="analytics" aria-label="Métricas">
+      <article class="panel growth-panel">
+        <div class="panel__heading">
+          <div>
+            <p class="section-kicker">Crecimiento</p>
+            <h2>Altas en 14 días</h2>
+          </div>
+          <strong>+{metrics.users_last_30_days}</strong>
+        </div>
+        <div class="bars" aria-label="Registro de usuarios por día">
+          {registrations.map((item) => {
+            const height = Math.max(5, Math.round((item.registrations / maxRegistrations) * 100));
+            return (
+              <div class="bar" title={`${item.registrations} altas el ${dateFormatter.format(new Date(item.day))}`}>
+                <span style={`--bar-height:${height}%`}>
+                  {item.registrations > 0 && <b>{item.registrations}</b>}
+                </span>
+                <small>{dateFormatter.format(new Date(item.day)).replace('.', '')}</small>
+              </div>
+            );
+          })}
+        </div>
+      </article>
+
+      <article class="panel templates-panel">
+        <div class="panel__heading">
+          <div>
+            <p class="section-kicker">Preferencias</p>
+            <h2>Plantillas usadas</h2>
+          </div>
+        </div>
+        <div class="template-metrics">
+          {templates.length === 0 ? (
+            <p class="panel-empty">Todavía no hay perfiles.</p>
+          ) : templates.map((item) => {
+            const percentage = Math.round((item.profiles / totalTemplateProfiles) * 100);
+            return (
+              <div>
+                <span>
+                  <i class={`template-dot template-dot--${item.template_id}`}></i>
+                  {templateLabels[item.template_id as keyof typeof templateLabels] || item.template_id}
+                </span>
+                <strong>{item.profiles}</strong>
+                <progress value={item.profiles} max={totalTemplateProfiles}>{percentage}%</progress>
+                <small>{percentage}%</small>
+              </div>
+            );
+          })}
+        </div>
+      </article>
+    </section>
+
+    <section class="users-section" id="usuarios">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Directorio</p>
+          <h2>Usuarios</h2>
+        </div>
+        <form class="user-search" action="/admin" method="get">
+          <label class="sr-only" for="user-search">Buscar usuario</label>
+          <input
+            id="user-search"
+            name="q"
+            type="search"
+            value={directory.search}
+            maxlength="80"
+            placeholder="Correo, nombre o usuario..."
+          />
+          <button type="submit">Buscar</button>
+          {directory.search && <a href="/admin#usuarios">Limpiar</a>}
+        </form>
+      </div>
+
+      <div class="user-table-wrap">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Perfil</th>
+              <th>Estado</th>
+              <th>Actividad</th>
+              <th>Alta</th>
+              <th><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {adminUsers.length === 0 ? (
+              <tr><td class="table-empty" colspan="6">No hay usuarios que coincidan con la búsqueda.</td></tr>
+            ) : adminUsers.map((account) => (
+              <tr>
+                <td data-label="Usuario">
+                  <strong>{account.email}</strong>
+                  <small class:list={['email-state', { 'email-state--ok': account.email_verified_at }]}>
+                    {account.email_verified_at ? 'Correo verificado' : 'Pendiente de verificar'}
+                  </small>
+                  {account.pending_email && <small>Cambio pendiente: {account.pending_email}</small>}
+                </td>
+                <td data-label="Perfil">
+                  <strong>{account.display_name || 'Sin perfil'}</strong>
+                  {account.slug && <small>@{account.slug} · {templateLabels[account.template_id as keyof typeof templateLabels] || account.template_id}</small>}
+                </td>
+                <td data-label="Estado">
+                  {account.suspended_at ? (
+                    <span class="account-status account-status--suspended">Oculto</span>
+                  ) : account.published ? (
+                    <span class="account-status account-status--published">Publicado</span>
+                  ) : (
+                    <span class="account-status">Borrador</span>
+                  )}
+                </td>
+                <td data-label="Actividad">
+                  <span class="activity-value">{account.links} enlaces</span>
+                  <small>{account.reports} denuncias</small>
+                </td>
+                <td data-label="Alta">
+                  <time datetime={account.created_at}>{dateTimeFormatter.format(new Date(account.created_at))}</time>
+                </td>
+                <td>
+                  {account.slug && !account.suspended_at && (
+                    <a class="table-action" href={`/${account.slug}`} target="_blank" aria-label={`Ver perfil de ${account.display_name}`}>Ver ↗</a>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <p>
+          {directory.totalUsers} {directory.totalUsers === 1 ? 'usuario' : 'usuarios'}
+          {directory.search && <> para “{directory.search}”</>}
+        </p>
+        <div>
+          {directory.page > 1 ? <a href={pageHref(directory.page - 1)}>← Anterior</a> : <span>← Anterior</span>}
+          <b>{directory.page} / {directory.totalPages}</b>
+          {directory.page < directory.totalPages ? <a href={pageHref(directory.page + 1)}>Siguiente →</a> : <span>Siguiente →</span>}
+        </div>
+      </div>
+    </section>
+
+    <section class="moderation-section" id="moderacion">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Contenido y seguridad</p>
+          <h2>Moderación</h2>
+        </div>
+        <div class="moderation-summary" aria-label="Resumen de moderación">
+          <span><strong>{counts.pending}</strong> pendientes</span>
+          <span><strong>{counts.suspended}</strong> ocultos</span>
+          <span><strong>{counts.total}</strong> totales</span>
+        </div>
+      </div>
+
+      <div class="report-list">
       {reports.length === 0 ? (
         <div class="empty">
           <span aria-hidden="true">✓</span>
@@ -176,6 +430,7 @@ const statusLabels = {
           </form>
         </article>
       ))}
+      </div>
     </section>
   </main>
 </Layout>
@@ -202,18 +457,119 @@ const statusLabels = {
   .brand { display: flex; align-items: center; gap: 0.55rem; color: #17201d; font-weight: 850; text-decoration: none; }
   .brand span { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 0.55rem; background: #17201d; color: #ff7357; font-family: var(--font-display); }
   nav { display: flex; align-items: center; gap: 1.2rem; font-size: 0.78rem; }
-  nav a { color: #53605b; }
+  nav a { color: #53605b; text-underline-offset: 0.25rem; }
+  nav a:last-child { padding-left: 1.2rem; border-left: 1px solid #d9d5ca; font-weight: 800; }
   .moderation { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; padding: 4rem 0; }
   .moderation__heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
   .moderation__heading > p { max-width: 30rem; margin: 0 0 0.5rem; color: #65706c; line-height: 1.6; }
   .eyebrow { margin: 0 0 0.55rem; color: #e45136; font-size: 0.7rem; font-weight: 850; letter-spacing: 0.12em; text-transform: uppercase; }
-  h1 { max-width: 14ch; margin: 0; color: #17201d; font-family: var(--font-display); font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 620; letter-spacing: -0.06em; line-height: 0.9; }
+  h1 { margin: 0; color: #17201d; font-family: var(--font-display); font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 620; letter-spacing: -0.06em; line-height: 0.86; }
   .notice { margin-top: 1.5rem; }
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: 2.5rem 0; gap: 0.75rem; }
-  .stats article { display: flex; min-height: 7rem; padding: 1rem; justify-content: space-between; flex-direction: column; border: 1px solid #d9d5ca; border-radius: 1rem; background: #fffdf8; }
-  .stats strong { color: #17201d; font-family: var(--font-display); font-size: 2.5rem; font-weight: 620; }
-  .stats span { color: #65706c; font-size: 0.72rem; font-weight: 750; }
+  .stats article { display: flex; min-height: 9rem; padding: 1.1rem; flex-direction: column; border: 1px solid #d9d5ca; border-radius: 1rem; background: #fffdf8; }
+  .stats .stat--primary { border-color: #17201d; background: #17201d; color: #fffdf8; }
+  .stats strong { margin: auto 0 0.15rem; color: #17201d; font-family: var(--font-display); font-size: 3rem; font-weight: 620; line-height: 0.9; }
+  .stats .stat--primary strong { color: #fffdf8; }
+  .stats span { color: #65706c; font-size: 0.72rem; font-weight: 800; }
+  .stats .stat--primary span { color: #bfc8c4; }
+  .stats small { color: #7a837f; font-size: 0.62rem; }
+  .stats .stat--primary small { color: #aeb9b4; }
+  .analytics { display: grid; grid-template-columns: 1.5fr 0.8fr; margin-bottom: 4rem; gap: 0.75rem; }
+  .panel {
+    min-width: 0;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border: 1px solid #d9d5ca;
+    border-radius: 1.25rem;
+    background: #fffdf8;
+  }
+  .panel__heading, .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; }
+  .section-kicker { margin: 0 0 0.35rem; color: #e45136; font-size: 0.62rem; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; }
+  .panel h2, .section-heading h2 { margin: 0; font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 620; letter-spacing: -0.045em; line-height: 0.95; }
+  .panel__heading > strong { color: #e45136; font-family: var(--font-display); font-size: 2.5rem; font-weight: 620; }
+  .bars { display: grid; height: 12rem; margin-top: 1.8rem; grid-template-columns: repeat(14, 1fr); align-items: end; gap: clamp(0.2rem, 1vw, 0.55rem); }
+  .bar { display: grid; height: 100%; min-width: 0; grid-template-rows: 1fr auto; align-items: end; gap: 0.45rem; text-align: center; }
+  .bar > span {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: var(--bar-height);
+    min-height: 0.35rem;
+    border-radius: 0.35rem 0.35rem 0.1rem 0.1rem;
+    background: #b8ddd0;
+  }
+  .bar:nth-child(4n + 2) > span { background: #f2c84f; }
+  .bar:nth-child(4n + 3) > span { background: #ef8069; }
+  .bar:nth-child(4n) > span { background: #17201d; }
+  .bar b { position: absolute; top: -1.15rem; left: 50%; color: #59645f; font-size: 0.55rem; transform: translateX(-50%); }
+  .bar small { overflow: hidden; color: #8a928f; font-size: clamp(0.42rem, 0.8vw, 0.55rem); white-space: nowrap; }
+  .template-metrics { display: grid; margin-top: 1.5rem; gap: 1.1rem; }
+  .template-metrics > div {
+    display: grid;
+    grid-template-columns: minmax(5rem, 1fr) auto;
+    align-items: center;
+    gap: 0.35rem 0.7rem;
+  }
+  .template-metrics span { display: flex; min-width: 0; align-items: center; gap: 0.45rem; font-size: 0.75rem; font-weight: 800; }
+  .template-metrics strong { font-size: 0.75rem; }
+  .template-metrics progress { width: 100%; height: 0.42rem; overflow: hidden; border: 0; border-radius: 999px; background: #e5e2da; }
+  .template-metrics progress::-webkit-progress-bar { border-radius: 999px; background: #e5e2da; }
+  .template-metrics progress::-webkit-progress-value { border-radius: 999px; background: #17201d; }
+  .template-metrics progress::-moz-progress-bar { border-radius: 999px; background: #17201d; }
+  .template-metrics small { color: #7a837f; font-size: 0.58rem; }
+  .template-dot { display: block; width: 0.65rem; height: 0.65rem; flex: 0 0 auto; border-radius: 0.18rem; background: #b8ddd0; }
+  .template-dot--pulse { border-radius: 50%; background: #f2c84f; }
+  .template-dot--aura { border-radius: 50%; background: #ef8069; box-shadow: 0 0 0 0.2rem #f8dcd6; }
+  .template-dot--frame { border-radius: 0; background: #17201d; }
+  .panel-empty { color: #65706c; font-size: 0.75rem; }
+  .users-section, .moderation-section { scroll-margin-top: 1rem; }
+  .users-section { margin-bottom: 4rem; }
+  .user-search { display: flex; align-items: center; gap: 0.45rem; }
+  .user-search input {
+    width: min(18rem, 42vw);
+    height: 2.65rem;
+    padding: 0 0.8rem;
+    border: 1px solid #cfcac0;
+    border-radius: 0.7rem;
+    background: #fffdf8;
+    color: #17201d;
+  }
+  .user-search button, .user-search a {
+    display: inline-flex;
+    min-height: 2.65rem;
+    padding: 0.55rem 0.8rem;
+    align-items: center;
+    border-radius: 0.7rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+  }
+  .user-search button { border-color: #17201d; background: #17201d; color: white; }
+  .user-search a { color: #65706c; }
+  .user-table-wrap { margin-top: 1rem; overflow-x: auto; border: 1px solid #d9d5ca; border-radius: 1.1rem; background: #fffdf8; }
+  .user-table { width: 100%; border-collapse: collapse; color: #17201d; text-align: left; }
+  .user-table th { padding: 0.75rem 0.85rem; border-bottom: 1px solid #d9d5ca; background: #ece9e1; color: #68726e; font-size: 0.58rem; letter-spacing: 0.07em; text-transform: uppercase; }
+  .user-table td { padding: 0.9rem 0.85rem; border-bottom: 1px solid #e4e0d7; font-size: 0.72rem; vertical-align: middle; }
+  .user-table tbody tr:last-child td { border-bottom: 0; }
+  .user-table td > strong, .user-table td > small { display: block; max-width: 18rem; overflow-wrap: anywhere; }
+  .user-table td > small { margin-top: 0.22rem; color: #7a837f; font-size: 0.6rem; }
+  .user-table .email-state { color: #9f2d19; }
+  .user-table .email-state--ok { color: #267257; }
+  .account-status { display: inline-flex; padding: 0.3rem 0.5rem; border-radius: 999px; background: #ece9e1; color: #59645f; font-size: 0.58rem; font-weight: 850; }
+  .account-status--published { background: #dcebe4; color: #1e664d; }
+  .account-status--suspended { background: #ffe0d9; color: #9f2d19; }
+  .activity-value { display: block; font-weight: 800; }
+  .user-table time { color: #65706c; font-size: 0.65rem; white-space: nowrap; }
+  .table-action { display: inline-flex; min-height: 2rem; padding: 0.4rem 0.55rem; align-items: center; border: 1px solid #cfcac0; border-radius: 0.55rem; color: #17201d; font-size: 0.62rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
+  .table-empty { padding: 3rem 1rem !important; color: #65706c; text-align: center; }
+  .pagination { display: flex; margin-top: 0.75rem; align-items: center; justify-content: space-between; color: #69736f; font-size: 0.65rem; }
+  .pagination p { margin: 0; }
+  .pagination > div { display: flex; align-items: center; gap: 0.8rem; }
+  .pagination a { color: #17201d; font-weight: 800; }
+  .pagination span { opacity: 0.45; }
+  .moderation-summary { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+  .moderation-summary span { padding: 0.45rem 0.65rem; border-radius: 999px; background: #fffdf8; color: #65706c; font-size: 0.62rem; }
+  .moderation-summary strong { color: #17201d; }
   .report-list { display: grid; gap: 1rem; }
+  .moderation-section .report-list { margin-top: 1rem; }
   .report { padding: clamp(1rem, 3vw, 1.6rem); border: 1px solid #d9d5ca; border-radius: 1.25rem; background: #fffdf8; }
   .report--pending { border-left: 5px solid #ff7357; }
   .report__top { display: flex; justify-content: space-between; gap: 1rem; }
@@ -246,10 +602,36 @@ const statusLabels = {
   .empty span { display: grid; width: 3rem; height: 3rem; margin: auto; place-items: center; border-radius: 50%; background: #dcebe4; color: #267257; font-size: 1.4rem; }
   .empty h2 { margin-bottom: 0.25rem; font-family: var(--font-display); }
   .empty p { margin: 0; color: #65706c; font-size: 0.8rem; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  @media (max-width: 900px) {
+    .analytics { grid-template-columns: 1fr; }
+  }
   @media (max-width: 680px) {
+    .admin-header { padding-inline: 1rem; }
+    nav { gap: 0.8rem; }
+    nav a:not(:last-child) { display: none; }
+    nav a:last-child { padding-left: 0; border-left: 0; }
     .moderation { padding-top: 2.5rem; }
     .moderation__heading { align-items: flex-start; flex-direction: column; }
     .stats { grid-template-columns: repeat(2, 1fr); }
+    .stats article { min-height: 8rem; }
+    .panel__heading, .section-heading { align-items: flex-start; flex-direction: column; }
+    .bars { gap: 0.2rem; }
+    .bar small { writing-mode: vertical-rl; }
+    .user-search { width: 100%; flex-wrap: wrap; }
+    .user-search input { width: 100%; }
+    .user-table-wrap { overflow: visible; border: 0; background: transparent; }
+    .user-table thead { display: none; }
+    .user-table, .user-table tbody, .user-table tr, .user-table td { display: block; width: 100%; }
+    .user-table tr { margin-bottom: 0.7rem; padding: 0.8rem; border: 1px solid #d9d5ca; border-radius: 1rem; background: #fffdf8; }
+    .user-table td { display: grid; padding: 0.45rem 0; grid-template-columns: 6rem minmax(0, 1fr); border: 0; gap: 0.6rem; }
+    .user-table td::before { color: #7a837f; content: attr(data-label); font-size: 0.58rem; font-weight: 850; letter-spacing: 0.06em; text-transform: uppercase; }
+    .user-table td:last-child { display: block; padding-top: 0.7rem; }
+    .user-table td:last-child::before { display: none; }
+    .user-table .table-empty { display: block; }
+    .user-table .table-empty::before { display: none; }
+    .pagination { align-items: flex-start; flex-direction: column; gap: 0.7rem; }
+    .moderation-summary { width: 100%; }
     .report__top { flex-direction: column; }
     .report__details { grid-template-columns: 1fr; }
     .report__details .report__message { grid-column: auto; }
