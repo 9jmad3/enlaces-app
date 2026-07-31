@@ -113,7 +113,7 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
           <div class="avatar-uploader" data-current-avatar={profile.avatar_url} style={avatarStyle}>
             <div class="avatar-uploader__preview" data-upload-preview>
               {profile.avatar_url
-                ? <img src={profile.avatar_url} alt="" />
+                ? <img class="avatar-live-image" src={profile.avatar_url} alt="" />
                 : <b>{profile.display_name[0]?.toUpperCase()}</b>}
             </div>
             <div class="avatar-uploader__content">
@@ -146,19 +146,19 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
               <div class="avatar-crops" aria-label="Vista previa del encuadre">
                 <figure class="avatar-crop avatar-crop--portrait">
                   <div data-avatar-crop-preview>
-                    {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
+                    {profile.avatar_url ? <img class="avatar-live-image" src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
                   </div>
                   <figcaption>Studio</figcaption>
                 </figure>
                 <figure class="avatar-crop avatar-crop--circle">
                   <div data-avatar-crop-preview>
-                    {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
+                    {profile.avatar_url ? <img class="avatar-live-image" src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
                   </div>
                   <figcaption>Pulse · Aura</figcaption>
                 </figure>
                 <figure class="avatar-crop avatar-crop--frame">
                   <div data-avatar-crop-preview>
-                    {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
+                    {profile.avatar_url ? <img class="avatar-live-image" src={profile.avatar_url} alt="" /> : <b>{profile.display_name[0]?.toUpperCase()}</b>}
                   </div>
                   <figcaption>Frame</figcaption>
                 </figure>
@@ -315,7 +315,7 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
         <div class="preview-phone__screen">
           <div class="preview-profile">
             <div class="preview-avatar">
-              {profile.avatar_url ? <img src={profile.avatar_url} alt="" data-preview-avatar /> : <b data-preview-initials>{profile.display_name[0]}</b>}
+              {profile.avatar_url ? <img class="avatar-live-image" src={profile.avatar_url} alt="" data-preview-avatar /> : <b data-preview-initials>{profile.display_name[0]}</b>}
             </div>
             <div>
               <small data-preview-slug>@{profile.slug}</small>
@@ -418,6 +418,7 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
       const image = document.createElement('img');
       image.src = src;
       image.alt = '';
+      image.className = 'avatar-live-image';
       return image;
     }
     const fallback = document.createElement('b');
@@ -700,7 +701,14 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     font-family: var(--font-display);
     font-size: 2rem;
   }
-  .avatar-uploader__preview img { width: 100%; height: 100%; object-fit: cover; object-position: var(--avatar-x) var(--avatar-y); }
+  :global(.avatar-live-image) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position:
+      var(--avatar-x, var(--preview-avatar-x, 50%))
+      var(--avatar-y, var(--preview-avatar-y, 20%));
+  }
   .avatar-uploader__content { display: grid; min-width: 0; gap: 0.48rem; }
   .field .avatar-uploader__input {
     position: absolute;
@@ -795,7 +803,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     background: var(--mint);
     box-shadow: 4px 4px 0 color-mix(in srgb, var(--coral) 78%, var(--ink));
   }
-  .avatar-crop img { width: 100%; height: 100%; object-fit: cover; object-position: var(--avatar-x) var(--avatar-y); }
   .avatar-crop b { font-family: var(--font-display); font-size: 1.6rem; }
   .avatar-crop--portrait > div { aspect-ratio: 4 / 5; border-radius: 0.8rem 0.8rem 0.8rem 0.2rem; }
   .avatar-crop--circle > div { aspect-ratio: 1; border-radius: 50%; }
@@ -949,7 +956,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   }
   .preview-profile { display: flex; align-items: flex-end; gap: 0.8rem; }
   .preview-avatar { display: grid; width: 5rem; height: 6rem; flex: 0 0 auto; place-items: center; overflow: hidden; border-radius: 1rem 1rem 1rem 0.25rem; background: var(--preview-accent); }
-  .preview-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: var(--preview-avatar-x) var(--preview-avatar-y); }
   .preview-avatar b { font-family: var(--font-display); font-size: 1.8rem; }
   .preview-profile small { color: var(--preview-accent); font-size: 0.55rem; font-weight: 850; text-transform: uppercase; }
   .preview-profile h2 { margin: 0.15rem 0; font-family: var(--font-display); font-size: 2rem; letter-spacing: -0.06em; line-height: 0.85; }
