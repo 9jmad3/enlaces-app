@@ -17,6 +17,7 @@ function mapFallback(profile) {
     accent_color: '#E65336',
     text_color: '#17201D',
     published: true,
+    updated_at: null,
     links: profile.links.map((link, index) => ({
       id: `fallback-${index}`,
       title: link.title,
@@ -47,6 +48,44 @@ export async function getPublicProfile(slug) {
   }
 
   return mapFallback(fallbackProfiles.find((profile) => profile.slug === slug));
+}
+
+export async function getPublishedProfiles() {
+  const fallback = fallbackProfiles.map((profile) => ({
+    slug: profile.slug,
+    updated_at: null,
+  }));
+
+  if (!hasDatabase()) return fallback;
+
+  const result = await query(
+    `SELECT slug, updated_at
+     FROM profiles
+     WHERE published = TRUE
+     ORDER BY slug`,
+  );
+  const databaseSlugs = new Set(result.rows.map((profile) => profile.slug));
+
+  return [
+    ...result.rows,
+    ...fallback.filter((profile) => !databaseSlugs.has(profile.slug)),
+  ];
+}
+
+export async function getPublicProfileAvatar(profileId) {
+  if (!hasDatabase() || !profileId || String(profileId).startsWith('fallback-')) {
+    return null;
+  }
+
+  const result = await query(
+    `SELECT a.content_type, a.content, a.etag
+     FROM profile_avatars a
+     JOIN profiles p ON p.id = a.profile_id
+     WHERE a.profile_id = $1 AND p.published = TRUE`,
+    [profileId],
+  );
+
+  return result.rows[0] || null;
 }
 
 export async function getEditableProfile(userId) {

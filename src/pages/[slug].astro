@@ -9,18 +9,30 @@ const slug = Astro.params.slug?.toLowerCase() || '';
 const profile = await getPublicProfile(slug);
 
 if (!profile) Astro.response.status = 404;
+
+const imageVersion = profile?.updated_at
+  ? `?v=${new Date(profile.updated_at).getTime()}`
+  : '';
+const socialImage = profile
+  ? `/api/og/${encodeURIComponent(profile.slug)}.png${imageVersion}`
+  : '/api/og/site.png';
 ---
 
 {profile ? (
   <Layout
     title={`${profile.display_name} | Trazli`}
     description={profile.tagline || profile.bio || `Enlaces de ${profile.display_name}`}
-    image={profile.avatar_url || '/favicon.svg'}
+    image={socialImage}
+    imageAlt={`Tarjeta de ${profile.display_name} en Trazli`}
   >
     <PublicProfile profile={profile} />
   </Layout>
 ) : (
-  <Layout title="Página no encontrada | Trazli" description="Este perfil no existe o todavía no está publicado.">
+  <Layout
+    title="Página no encontrada | Trazli"
+    description="Este perfil no existe o todavía no está publicado."
+    noindex
+  >
     <main class="not-found">
       <span>404</span>
       <h1>Este espacio está libre.</h1>

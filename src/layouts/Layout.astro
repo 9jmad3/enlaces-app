@@ -5,14 +5,22 @@ import BaseHead from '../components/BaseHead.astro';
 const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
-  image = "/img/jose-profile.jpeg",
+  image = "/api/og/site.png",
+  imageAlt = `${title} en Trazli`,
+  noindex = false,
   bodyClass = "",
 } = Astro.props;
 ---
 <!doctype html>
 <html lang="es">
   <head>
-    <BaseHead title={title} description={description} image={image} />
+    <BaseHead
+      title={title}
+      description={description}
+      image={image}
+      imageAlt={imageAlt}
+      noindex={noindex}
+    />
   </head>
   <body class={bodyClass}>
     <slot />
