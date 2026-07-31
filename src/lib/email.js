@@ -23,7 +23,14 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
-function emailLayout({ preheading, heading, body, buttonLabel, buttonUrl }) {
+function emailLayout({
+  preheading,
+  heading,
+  body,
+  buttonLabel,
+  buttonUrl,
+  footer = 'Si no has solicitado esta acción, puedes ignorar este correo.',
+}) {
   return `<!doctype html>
 <html lang="es">
   <body style="margin:0;padding:32px 16px;background:#f7f4ed;color:#17201d;font-family:Arial,sans-serif">
@@ -32,7 +39,7 @@ function emailLayout({ preheading, heading, body, buttonLabel, buttonUrl }) {
       <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:38px;line-height:1">${escapeHtml(heading)}</h1>
       <div style="color:#515c58;font-size:15px;line-height:1.7">${body}</div>
       <a href="${escapeHtml(buttonUrl)}" style="display:inline-block;margin-top:24px;padding:14px 22px;border-radius:999px;background:#e65336;color:#fff;text-decoration:none;font-weight:700">${escapeHtml(buttonLabel)}</a>
-      <p style="margin:26px 0 0;color:#7b8581;font-size:12px;line-height:1.6">Si no has solicitado esta acción, puedes ignorar este correo.</p>
+      <p style="margin:26px 0 0;color:#7b8581;font-size:12px;line-height:1.6">${escapeHtml(footer)}</p>
     </div>
   </body>
 </html>`;
@@ -104,5 +111,111 @@ export function sendPasswordResetEmail({ email, displayName, token }) {
     }),
     text: `Restablece tu contraseña de Trazli en ${url}\n\nEl enlace caduca en 30 minutos. Si no lo has solicitado, ignora el mensaje.`,
     idempotencyKey: idempotencyKey('reset', token),
+  });
+}
+
+export function sendReportReceiptEmail({
+  email,
+  reportId,
+  profileSlug,
+  reasonLabel,
+}) {
+  const reference = reportId.slice(0, 8).toUpperCase();
+  return sendEmail({
+    to: email,
+    subject: `Hemos recibido tu denuncia sobre @${profileSlug}`,
+    html: emailLayout({
+      preheading: `Denuncia ${reference}`,
+      heading: 'Gracias por avisarnos.',
+      body: `<p>Hemos recibido tu denuncia sobre <strong>@${escapeHtml(profileSlug)}</strong> por «${escapeHtml(reasonLabel)}».</p><p>La revisaremos cuidadosamente y te comunicaremos la decisión final en esta dirección.</p>`,
+      buttonLabel: 'Consultar las condiciones',
+      buttonUrl: `${getSiteUrl()}/condiciones#moderacion-suspension`,
+      footer: `Referencia ${reference}. Puedes responder a este correo si necesitas aportar información adicional.`,
+    }),
+    text: `Hemos recibido tu denuncia sobre @${profileSlug} por "${reasonLabel}".\n\nReferencia: ${reference}.\nTe comunicaremos la decisión final en esta dirección.`,
+    idempotencyKey: idempotencyKey('report-receipt', reportId),
+  });
+}
+
+export function sendReporterDecisionEmail({
+  email,
+  actionId,
+  reportId,
+  profileSlug,
+  action,
+  reasonLabel,
+  publicReason,
+  ruleLabel,
+}) {
+  const reference = reportId.slice(0, 8).toUpperCase();
+  const decisions = {
+    dismiss: {
+      subject: `Resolución de tu denuncia sobre @${profileSlug}`,
+      heading: 'Hemos completado la revisión.',
+      decision: 'No hemos restringido el perfil en este momento.',
+    },
+    suspend: {
+      subject: `Hemos actuado sobre @${profileSlug}`,
+      heading: 'Hemos completado la revisión.',
+      decision: 'Hemos ocultado el perfil mientras se mantiene esta decisión.',
+    },
+    restore: {
+      subject: `Actualización sobre @${profileSlug}`,
+      heading: 'La decisión se ha actualizado.',
+      decision: 'El perfil ha sido restaurado tras una nueva revisión.',
+    },
+  };
+  const outcome = decisions[action];
+  if (!outcome) return false;
+
+  return sendEmail({
+    to: email,
+    subject: outcome.subject,
+    html: emailLayout({
+      preheading: `Resolución ${reference}`,
+      heading: outcome.heading,
+      body: `<p><strong>Decisión:</strong> ${escapeHtml(outcome.decision)}</p><p><strong>Motivo evaluado:</strong> ${escapeHtml(reasonLabel)}</p><p><strong>Explicación:</strong> ${escapeHtml(publicReason)}</p><p><strong>Norma aplicada:</strong> ${escapeHtml(ruleLabel)}</p>`,
+      buttonLabel: 'Solicitar una revisión',
+      buttonUrl: `mailto:${process.env.EMAIL_REPLY_TO}?subject=${encodeURIComponent(`Revisión denuncia ${reference}`)}`,
+      footer: `Referencia ${reference}. Puedes solicitar una revisión respondiendo a este correo.`,
+    }),
+    text: `${outcome.heading}\n\nDecisión: ${outcome.decision}\nMotivo evaluado: ${reasonLabel}\nExplicación: ${publicReason}\nNorma aplicada: ${ruleLabel}\n\nReferencia: ${reference}. Puedes solicitar una revisión respondiendo a este correo.`,
+    idempotencyKey: idempotencyKey('report-decision', `${actionId}:reporter`),
+  });
+}
+
+export function sendOwnerModerationEmail({
+  email,
+  displayName,
+  actionId,
+  profileSlug,
+  action,
+  reasonLabel,
+  publicReason,
+  ruleLabel,
+}) {
+  const restored = action === 'restore';
+  const heading = restored ? 'Tu perfil vuelve a estar publicado.' : 'Tu perfil ha sido ocultado.';
+  const decision = restored
+    ? `El perfil @${profileSlug} ha sido restaurado tras una nueva revisión.`
+    : `Hemos restringido el acceso público al perfil @${profileSlug}.`;
+
+  return sendEmail({
+    to: email,
+    subject: restored
+      ? `Tu perfil @${profileSlug} ha sido restaurado`
+      : `Información sobre tu perfil @${profileSlug}`,
+    html: emailLayout({
+      preheading: 'Decisión de moderación',
+      heading,
+      body: `<p>Hola, ${escapeHtml(displayName || profileSlug)}.</p><p><strong>Decisión:</strong> ${escapeHtml(decision)}</p><p><strong>Motivo:</strong> ${escapeHtml(reasonLabel)}</p><p><strong>Explicación:</strong> ${escapeHtml(publicReason)}</p><p><strong>Norma aplicada:</strong> ${escapeHtml(ruleLabel)}</p>`,
+      buttonLabel: restored ? 'Abrir mi perfil' : 'Solicitar una revisión',
+      buttonUrl: restored
+        ? `${getSiteUrl()}/${encodeURIComponent(profileSlug)}`
+        : `mailto:${process.env.EMAIL_REPLY_TO}?subject=${encodeURIComponent(`Revisión del perfil @${profileSlug}`)}`,
+      footer: 'Puedes solicitar una revisión gratuita respondiendo a este correo o escribiendo a hola@trazli.com.',
+    }),
+    text: `${heading}\n\n${decision}\nMotivo: ${reasonLabel}\nExplicación: ${publicReason}\nNorma aplicada: ${ruleLabel}\n\nPuedes solicitar una revisión respondiendo a este correo.`,
+    idempotencyKey: idempotencyKey('owner-moderation', `${actionId}:owner`),
   });
 }

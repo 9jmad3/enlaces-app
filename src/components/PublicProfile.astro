@@ -125,6 +125,9 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
           Tu correo <span>(opcional)</span>
           <input name="email" type="email" maxlength="254" autocomplete="email" placeholder="Para contactarte si necesitamos información" />
         </label>
+        <p class="report-dialog__email-note">
+          Si lo facilitas, recibirás un acuse y la resolución final de la revisión.
+        </p>
         <label class="report-honeypot" aria-hidden="true">
           Sitio web
           <input name="website" type="text" tabindex="-1" autocomplete="off" />
@@ -397,6 +400,7 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     cursor: pointer;
   }
   .report-dialog__intro { margin: 0; color: #64706b; font-size: 0.75rem; line-height: 1.55; }
+  .report-dialog__email-note { margin: -0.55rem 0 0; color: #69736f; font-size: 0.65rem; line-height: 1.45; }
   .report-dialog label { display: grid; gap: 0.35rem; font-size: 0.72rem; font-weight: 800; }
   .report-dialog label > span { color: #7a837f; font-weight: 500; }
   .report-dialog input, .report-dialog select, .report-dialog textarea {

@@ -1,7 +1,10 @@
 import { hasDatabase } from '../../../lib/db.js';
+import { sendReportReceiptEmail } from '../../../lib/email.js';
 import {
   createProfileReport,
   isReportReason,
+  markReportReceiptSent,
+  REPORT_REASONS,
 } from '../../../lib/moderation.js';
 import { getPublicProfile } from '../../../lib/profiles.js';
 import {
@@ -57,12 +60,26 @@ export async function POST({ request }) {
     return redirect(slug, 'reportError');
   }
 
-  await createProfileReport({
+  const reportId = await createProfileReport({
     profileId: profile.id,
     reporterEmail,
     reason,
     details,
   });
+
+  if (reporterEmail) {
+    try {
+      const sent = await sendReportReceiptEmail({
+        email: reporterEmail,
+        reportId,
+        profileSlug: profile.slug,
+        reasonLabel: REPORT_REASONS[reason],
+      });
+      if (sent) await markReportReceiptSent(reportId);
+    } catch (error) {
+      console.error('No se pudo enviar el acuse de la denuncia', error);
+    }
+  }
 
   return redirect(slug, 'reported');
 }

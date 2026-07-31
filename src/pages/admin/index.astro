@@ -13,12 +13,19 @@ interface ModerationReport {
   reporter_email: string | null;
   status: ReportStatus;
   admin_note: string;
+  public_reason: string;
+  receipt_sent_at: string | null;
   created_at: string;
   slug: string;
   display_name: string;
   suspended_at: string | null;
   suspension_reason: string | null;
   owner_email: string;
+  latest_action: 'review' | 'dismiss' | 'suspend' | 'restore' | null;
+  reporter_notified_at: string | null;
+  owner_notified_at: string | null;
+  reporter_notification_error: string | null;
+  owner_notification_error: string | null;
 }
 
 const user = Astro.locals.user;
@@ -31,6 +38,8 @@ const counts = dashboard.counts;
 const updated = Astro.url.searchParams.has('updated');
 const error = Astro.url.searchParams.has('error');
 const limited = Astro.url.searchParams.has('limited');
+const notificationError = Astro.url.searchParams.has('notificationError');
+const explanationRequired = Astro.url.searchParams.has('explanationRequired');
 const statusLabels = {
   pending: 'Pendiente',
   reviewed: 'Revisada',
@@ -64,6 +73,16 @@ const statusLabels = {
     {updated && <p class="notice notice--success" role="status">Acción guardada.</p>}
     {error && <p class="notice" role="alert">No se pudo aplicar la acción.</p>}
     {limited && <p class="notice" role="alert">Demasiadas acciones. Espera antes de continuar.</p>}
+    {notificationError && (
+      <p class="notice" role="alert">
+        La decisión se ha guardado, pero uno de los correos ha fallado. El detalle aparece en la denuncia para que puedas reintentarlo.
+      </p>
+    )}
+    {explanationRequired && (
+      <p class="notice" role="alert">
+        Escribe una explicación pública de al menos 10 caracteres antes de cerrar el caso.
+      </p>
+    )}
 
     <section class="stats" aria-label="Resumen">
       <article><strong>{counts.pending}</strong><span>Pendientes</span></article>
@@ -100,7 +119,29 @@ const statusLabels = {
             <div><dt>Contacto denunciante</dt><dd>{report.reporter_email || 'No facilitado'}</dd></div>
             <div class="report__message"><dt>Detalles</dt><dd>{report.details || 'Sin detalles adicionales.'}</dd></div>
             {report.admin_note && <div class="report__message"><dt>Última nota interna</dt><dd>{report.admin_note}</dd></div>}
+            {report.public_reason && <div class="report__message"><dt>Explicación comunicada</dt><dd>{report.public_reason}</dd></div>}
           </dl>
+
+          <div class="delivery" aria-label="Estado de las comunicaciones">
+            <span class:list={{ 'delivery--sent': report.receipt_sent_at }}>
+              Acuse: {!report.reporter_email ? 'sin correo' : report.receipt_sent_at ? 'enviado' : 'no enviado'}
+            </span>
+            {report.reporter_email && ['dismiss', 'suspend', 'restore'].includes(report.latest_action || '') && (
+              <span class:list={{ 'delivery--sent': report.reporter_notified_at, 'delivery--error': report.reporter_notification_error }}>
+                Denunciante: {report.reporter_notified_at ? 'notificado' : report.reporter_notification_error ? 'falló' : 'pendiente'}
+              </span>
+            )}
+            {['suspend', 'restore'].includes(report.latest_action || '') && (
+              <span class:list={{ 'delivery--sent': report.owner_notified_at, 'delivery--error': report.owner_notification_error }}>
+                Propietario: {report.owner_notified_at ? 'notificado' : report.owner_notification_error ? 'falló' : 'pendiente'}
+              </span>
+            )}
+          </div>
+          {(report.reporter_notification_error || report.owner_notification_error) && (
+            <p class="delivery-error">
+              Error de correo: {report.reporter_notification_error || report.owner_notification_error}
+            </p>
+          )}
 
           {report.suspended_at && (
             <p class="suspended">
@@ -110,6 +151,15 @@ const statusLabels = {
 
           <form class="moderation-form" action="/api/admin/reports" method="post">
             <input type="hidden" name="reportId" value={report.id} />
+            <label>
+              Explicación para las personas afectadas
+              <textarea
+                name="publicReason"
+                maxlength="1000"
+                placeholder="Explica qué se ha comprobado y por qué se toma esta decisión, sin incluir datos personales del denunciante."
+              >{report.public_reason}</textarea>
+              <small>Obligatoria para descartar, ocultar o restaurar. Se incluirá en los correos y será visible para el propietario.</small>
+            </label>
             <label>
               Nota interna
               <textarea name="note" maxlength="1000" placeholder="Decisión, comprobaciones o motivo de la acción...">{report.admin_note}</textarea>
@@ -179,7 +229,14 @@ const statusLabels = {
   dt { margin-bottom: 0.25rem; color: #7a837f; font-size: 0.62rem; font-weight: 850; text-transform: uppercase; }
   dd { margin: 0; overflow-wrap: anywhere; font-size: 0.8rem; line-height: 1.5; }
   .suspended { padding: 0.75rem; border-radius: 0.7rem; background: #2d3331; color: white; font-size: 0.75rem; }
+  .delivery { display: flex; margin: -0.35rem 0 1rem; gap: 0.45rem; flex-wrap: wrap; }
+  .delivery span { padding: 0.35rem 0.55rem; border-radius: 999px; background: #ece9e1; color: #626c68; font-size: 0.62rem; font-weight: 800; }
+  .delivery .delivery--sent { background: #dcebe4; color: #1e664d; }
+  .delivery .delivery--error { background: #ffe0d9; color: #9f2d19; }
+  .delivery-error { margin: -0.35rem 0 1rem; color: #9f2d19; font-size: 0.7rem; overflow-wrap: anywhere; }
   .moderation-form label { display: grid; gap: 0.35rem; color: #59645f; font-size: 0.7rem; font-weight: 750; }
+  .moderation-form label + label { margin-top: 0.8rem; }
+  .moderation-form small { color: #7a837f; font-size: 0.64rem; font-weight: 500; line-height: 1.45; }
   textarea { width: 100%; min-height: 5rem; padding: 0.75rem; resize: vertical; border: 1px solid #d9d5ca; border-radius: 0.7rem; background: white; color: #17201d; font: inherit; }
   .actions { display: flex; margin-top: 0.7rem; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
   button { min-height: 2.5rem; padding: 0.55rem 0.8rem; border: 1px solid #cfcac0; border-radius: 0.65rem; background: white; color: #17201d; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
