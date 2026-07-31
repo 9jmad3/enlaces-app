@@ -1,16 +1,19 @@
+import { createRequire } from 'node:module';
+import * as fontkit from 'fontkit';
 import sharp from 'sharp';
 
 const WIDTH = 1200;
 const HEIGHT = 630;
-
-function escapeXml(value) {
-  return String(value || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;');
-}
+const require = createRequire(import.meta.url);
+const displayFont = fontkit.openSync(
+  require.resolve('@fontsource/fraunces/files/fraunces-latin-700-normal.woff2'),
+);
+const bodyFont = fontkit.openSync(
+  require.resolve('@fontsource/manrope/files/manrope-latin-600-normal.woff2'),
+);
+const strongFont = fontkit.openSync(
+  require.resolve('@fontsource/manrope/files/manrope-latin-800-normal.woff2'),
+);
 
 function safeColor(value, fallback) {
   return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? value : fallback;
@@ -49,10 +52,41 @@ function wrapText(value, maxCharacters = 39, maxLines = 2) {
   return lines;
 }
 
-function svgTextLines(lines, x, y, lineHeight) {
-  return lines.map((line, index) => (
-    `<text x="${x}" y="${y + (index * lineHeight)}">${escapeXml(line)}</text>`
-  )).join('');
+function vectorText(value, {
+  font,
+  x,
+  y,
+  size,
+  fill,
+  anchor = 'start',
+  letterSpacing = 0,
+  opacity = 1,
+}) {
+  const run = font.layout(String(value || ''));
+  const scale = size / font.unitsPerEm;
+  const advance = run.positions.reduce(
+    (total, position) => total + (position.xAdvance * scale),
+    0,
+  ) + Math.max(0, run.glyphs.length - 1) * letterSpacing;
+  let cursor = anchor === 'middle' ? x - (advance / 2) : x;
+
+  const paths = run.glyphs.map((glyph, index) => {
+    const position = run.positions[index];
+    const glyphX = cursor + (position.xOffset * scale);
+    const glyphY = y - (position.yOffset * scale);
+    cursor += (position.xAdvance * scale) + letterSpacing;
+
+    return `<path d="${glyph.path.toSVG()}" transform="translate(${glyphX} ${glyphY}) scale(${scale} ${-scale})"/>`;
+  }).join('');
+
+  return `<g fill="${fill}" opacity="${opacity}">${paths}</g>`;
+}
+
+function vectorTextLines(lines, options) {
+  return lines.map((line, index) => vectorText(line, {
+    ...options,
+    y: options.y + (index * options.lineHeight),
+  })).join('');
 }
 
 async function prepareAvatar(avatar, circular = false) {
@@ -91,7 +125,7 @@ export async function renderProfileOgImage(profile, avatar = null) {
   const taglineY = nameLines.length > 1 ? 390 : 335;
   const taglineLines = wrapText(tagline);
   const avatarImage = await prepareAvatar(avatar, pulse);
-  const avatarFallback = escapeXml(initials(displayName));
+  const avatarFallback = initials(displayName);
 
   const decoration = pulse
     ? `
@@ -120,26 +154,73 @@ export async function renderProfileOgImage(profile, avatar = null) {
       <rect x="72" y="150" width="290" height="290" rx="${pulse ? 145 : 65}" fill="${background}" stroke="${foreground}" stroke-width="${pulse ? 10 : 3}"/>
       ${avatarImage ? '' : `
         <rect x="82" y="160" width="270" height="270" rx="${pulse ? 135 : 54}" fill="${accent}"/>
-        <text x="217" y="330" text-anchor="middle" fill="${background}" font-family="Georgia, serif" font-size="88" font-weight="700">${avatarFallback}</text>
+        ${vectorText(avatarFallback, {
+          font: displayFont,
+          x: 217,
+          y: 330,
+          size: 88,
+          fill: background,
+          anchor: 'middle',
+        })}
       `}
 
-      <text x="410" y="166" fill="${accent}" font-family="Arial, sans-serif" font-size="23" font-weight="800" letter-spacing="3">${escapeXml(handle.toUpperCase())}</text>
-      <g fill="${foreground}" font-family="Georgia, serif" font-size="${nameSize}" font-weight="700" letter-spacing="-3">
-        ${svgTextLines(nameLines, 410, nameY, 76)}
-      </g>
-      <g fill="${foreground}" opacity=".76" font-family="Arial, sans-serif" font-size="31" font-weight="600">
-        ${svgTextLines(taglineLines, 414, taglineY, 44)}
-      </g>
+      ${vectorText(handle.toUpperCase(), {
+        font: strongFont,
+        x: 410,
+        y: 166,
+        size: 23,
+        fill: accent,
+        letterSpacing: 3,
+      })}
+      ${vectorTextLines(nameLines, {
+        font: displayFont,
+        x: 410,
+        y: nameY,
+        size: nameSize,
+        fill: foreground,
+        letterSpacing: -3,
+        lineHeight: 76,
+      })}
+      ${vectorTextLines(taglineLines, {
+        font: bodyFont,
+        x: 414,
+        y: taglineY,
+        size: 31,
+        fill: foreground,
+        opacity: 0.76,
+        lineHeight: 44,
+      })}
 
       <g transform="translate(410 485)">
         <rect width="190" height="58" rx="29" fill="${accent}"/>
-        <text x="95" y="38" text-anchor="middle" fill="${background}" font-family="Arial, sans-serif" font-size="21" font-weight="800">VER ENLACES ↗</text>
       </g>
+      ${vectorText('VER ENLACES', {
+        font: strongFont,
+        x: 492,
+        y: 523,
+        size: 21,
+        fill: background,
+        anchor: 'middle',
+      })}
+      <path d="M560 519 L574 505 M563 505 H574 V516" fill="none" stroke="${background}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
       <g transform="translate(965 548)">
         <rect width="52" height="52" rx="15" fill="${foreground}"/>
-        <text x="26" y="37" text-anchor="middle" fill="${background}" font-family="Georgia, serif" font-size="28" font-weight="700">T</text>
-        <text x="64" y="34" fill="${foreground}" font-family="Arial, sans-serif" font-size="23" font-weight="800">Trazli</text>
       </g>
+      ${vectorText('T', {
+        font: displayFont,
+        x: 991,
+        y: 585,
+        size: 28,
+        fill: background,
+        anchor: 'middle',
+      })}
+      ${vectorText('Trazli', {
+        font: strongFont,
+        x: 1029,
+        y: 582,
+        size: 23,
+        fill: foreground,
+      })}
     </svg>
   `);
 
