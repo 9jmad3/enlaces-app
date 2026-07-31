@@ -281,7 +281,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
       const value = input.value;
       if (key === 'name') {
         setText('[data-preview-name]', value || 'Tu nombre');
-        setText('[data-preview-initials]', value?.[0]?.toUpperCase() || 'N');
+        setText('[data-preview-initials]', value?.[0]?.toUpperCase() || 'T');
       } else if (key === 'slug') {
         setText('[data-preview-slug]', `@${value || 'tuusuario'}`);
         setText('[data-current-slug]', value || 'tuusuario');
@@ -347,7 +347,7 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
     const fallback = document.createElement('b');
     fallback.dataset.previewInitials = '';
     fallback.textContent = document.querySelector<HTMLElement>('[data-preview-name]')
-      ?.textContent?.trim()?.[0]?.toUpperCase() || 'N';
+      ?.textContent?.trim()?.[0]?.toUpperCase() || 'T';
     return fallback;
   };
 
