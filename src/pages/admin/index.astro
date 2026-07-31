@@ -1,0 +1,201 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getModerationDashboard, isAdmin, REPORT_REASONS } from '../../lib/moderation.js';
+
+export const prerender = false;
+
+type ReportReason = keyof typeof REPORT_REASONS;
+type ReportStatus = 'pending' | 'reviewed' | 'dismissed' | 'actioned';
+interface ModerationReport {
+  id: string;
+  reason: ReportReason;
+  details: string;
+  reporter_email: string | null;
+  status: ReportStatus;
+  admin_note: string;
+  created_at: string;
+  slug: string;
+  display_name: string;
+  suspended_at: string | null;
+  suspension_reason: string | null;
+  owner_email: string;
+}
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login?next=/admin');
+if (!isAdmin(user)) return new Response('No encontrado', { status: 404 });
+
+const dashboard = await getModerationDashboard();
+const reports = dashboard.reports as ModerationReport[];
+const counts = dashboard.counts;
+const updated = Astro.url.searchParams.has('updated');
+const error = Astro.url.searchParams.has('error');
+const limited = Astro.url.searchParams.has('limited');
+const statusLabels = {
+  pending: 'Pendiente',
+  reviewed: 'Revisada',
+  dismissed: 'Descartada',
+  actioned: 'Actuada',
+};
+---
+
+<Layout
+  title="Moderación | Trazli"
+  description="Panel privado de moderación de Trazli."
+  noindex
+>
+  <header class="admin-header">
+    <a class="brand" href="/"><span>T</span>Trazli</a>
+    <nav aria-label="Administración">
+      <strong>Moderación</strong>
+      <a href="/app">Mi panel</a>
+    </nav>
+  </header>
+
+  <main class="moderation">
+    <div class="moderation__heading">
+      <div>
+        <p class="eyebrow">Panel privado</p>
+        <h1>Contenido y seguridad.</h1>
+      </div>
+      <p>Revisa cada caso antes de ocultar un perfil. Todas las acciones quedan registradas.</p>
+    </div>
+
+    {updated && <p class="notice notice--success" role="status">Acción guardada.</p>}
+    {error && <p class="notice" role="alert">No se pudo aplicar la acción.</p>}
+    {limited && <p class="notice" role="alert">Demasiadas acciones. Espera antes de continuar.</p>}
+
+    <section class="stats" aria-label="Resumen">
+      <article><strong>{counts.pending}</strong><span>Pendientes</span></article>
+      <article><strong>{counts.suspended}</strong><span>Perfiles ocultos</span></article>
+      <article><strong>{counts.actioned}</strong><span>Con acción</span></article>
+      <article><strong>{counts.total}</strong><span>Total</span></article>
+    </section>
+
+    <section class="report-list">
+      {reports.length === 0 ? (
+        <div class="empty">
+          <span aria-hidden="true">✓</span>
+          <h2>No hay denuncias</h2>
+          <p>Cuando llegue una, aparecerá aquí con toda la información necesaria.</p>
+        </div>
+      ) : reports.map((report) => (
+        <article class:list={['report', { 'report--pending': report.status === 'pending' }]}>
+          <div class="report__top">
+            <div>
+              <span class={`status status--${report.status}`}>{statusLabels[report.status]}</span>
+              <h2>{REPORT_REASONS[report.reason]}</h2>
+              <p>
+                Perfil <a href={`/${report.slug}`} target="_blank">@{report.slug}</a>
+                <span>·</span> {report.display_name}
+              </p>
+            </div>
+            <time datetime={report.created_at}>
+              {new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(report.created_at))}
+            </time>
+          </div>
+
+          <dl class="report__details">
+            <div><dt>Propietario</dt><dd>{report.owner_email}</dd></div>
+            <div><dt>Contacto denunciante</dt><dd>{report.reporter_email || 'No facilitado'}</dd></div>
+            <div class="report__message"><dt>Detalles</dt><dd>{report.details || 'Sin detalles adicionales.'}</dd></div>
+            {report.admin_note && <div class="report__message"><dt>Última nota interna</dt><dd>{report.admin_note}</dd></div>}
+          </dl>
+
+          {report.suspended_at && (
+            <p class="suspended">
+              Perfil oculto: {report.suspension_reason || 'Sin motivo interno indicado'}
+            </p>
+          )}
+
+          <form class="moderation-form" action="/api/admin/reports" method="post">
+            <input type="hidden" name="reportId" value={report.id} />
+            <label>
+              Nota interna
+              <textarea name="note" maxlength="1000" placeholder="Decisión, comprobaciones o motivo de la acción...">{report.admin_note}</textarea>
+            </label>
+            <div class="actions">
+              <button name="action" value="review" type="submit">Marcar revisada</button>
+              <button name="action" value="dismiss" type="submit">Descartar</button>
+              {report.suspended_at ? (
+                <button class="action--restore" name="action" value="restore" type="submit" data-confirm="¿Restaurar y volver a publicar este perfil?">Restaurar perfil</button>
+              ) : (
+                <button class="action--danger" name="action" value="suspend" type="submit" data-confirm="¿Ocultar este perfil de forma inmediata?">Ocultar perfil</button>
+              )}
+            </div>
+          </form>
+        </article>
+      ))}
+    </section>
+  </main>
+</Layout>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-confirm]').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      if (!window.confirm(button.dataset.confirm)) event.preventDefault();
+    });
+  });
+</script>
+
+<style>
+  :global(body) { background: #f3f0e8; }
+  .admin-header {
+    display: flex;
+    min-height: 4.5rem;
+    padding: 0 4vw;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #d9d5ca;
+    background: #fffdf8;
+  }
+  .brand { display: flex; align-items: center; gap: 0.55rem; color: #17201d; font-weight: 850; text-decoration: none; }
+  .brand span { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 0.55rem; background: #17201d; color: #ff7357; font-family: var(--font-display); }
+  nav { display: flex; align-items: center; gap: 1.2rem; font-size: 0.78rem; }
+  nav a { color: #53605b; }
+  .moderation { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; padding: 4rem 0; }
+  .moderation__heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
+  .moderation__heading > p { max-width: 30rem; margin: 0 0 0.5rem; color: #65706c; line-height: 1.6; }
+  .eyebrow { margin: 0 0 0.55rem; color: #e45136; font-size: 0.7rem; font-weight: 850; letter-spacing: 0.12em; text-transform: uppercase; }
+  h1 { max-width: 14ch; margin: 0; color: #17201d; font-family: var(--font-display); font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 620; letter-spacing: -0.06em; line-height: 0.9; }
+  .notice { margin-top: 1.5rem; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: 2.5rem 0; gap: 0.75rem; }
+  .stats article { display: flex; min-height: 7rem; padding: 1rem; justify-content: space-between; flex-direction: column; border: 1px solid #d9d5ca; border-radius: 1rem; background: #fffdf8; }
+  .stats strong { color: #17201d; font-family: var(--font-display); font-size: 2.5rem; font-weight: 620; }
+  .stats span { color: #65706c; font-size: 0.72rem; font-weight: 750; }
+  .report-list { display: grid; gap: 1rem; }
+  .report { padding: clamp(1rem, 3vw, 1.6rem); border: 1px solid #d9d5ca; border-radius: 1.25rem; background: #fffdf8; }
+  .report--pending { border-left: 5px solid #ff7357; }
+  .report__top { display: flex; justify-content: space-between; gap: 1rem; }
+  .report__top h2 { margin: 0.55rem 0 0.25rem; font-family: var(--font-display); font-size: 1.6rem; }
+  .report__top p, .report__top time { margin: 0; color: #65706c; font-size: 0.75rem; }
+  .report__top p span { padding: 0 0.25rem; }
+  .status { display: inline-flex; padding: 0.3rem 0.55rem; border-radius: 999px; background: #e9ece9; color: #46504c; font-size: 0.62rem; font-weight: 850; text-transform: uppercase; }
+  .status--pending { background: #ffe0d9; color: #9f2d19; }
+  .status--actioned { background: #282f2d; color: white; }
+  .report__details { display: grid; grid-template-columns: repeat(2, 1fr); margin: 1.25rem 0; gap: 0.65rem; }
+  .report__details div { padding: 0.8rem; border-radius: 0.75rem; background: #f4f2ec; }
+  .report__details .report__message { grid-column: 1 / -1; }
+  dt { margin-bottom: 0.25rem; color: #7a837f; font-size: 0.62rem; font-weight: 850; text-transform: uppercase; }
+  dd { margin: 0; overflow-wrap: anywhere; font-size: 0.8rem; line-height: 1.5; }
+  .suspended { padding: 0.75rem; border-radius: 0.7rem; background: #2d3331; color: white; font-size: 0.75rem; }
+  .moderation-form label { display: grid; gap: 0.35rem; color: #59645f; font-size: 0.7rem; font-weight: 750; }
+  textarea { width: 100%; min-height: 5rem; padding: 0.75rem; resize: vertical; border: 1px solid #d9d5ca; border-radius: 0.7rem; background: white; color: #17201d; font: inherit; }
+  .actions { display: flex; margin-top: 0.7rem; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
+  button { min-height: 2.5rem; padding: 0.55rem 0.8rem; border: 1px solid #cfcac0; border-radius: 0.65rem; background: white; color: #17201d; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
+  .action--danger { border-color: #bc3f29; background: #bc3f29; color: white; }
+  .action--restore { border-color: #267257; background: #267257; color: white; }
+  .empty { padding: 4rem 1rem; border: 1px dashed #c8c3b8; border-radius: 1.25rem; text-align: center; }
+  .empty span { display: grid; width: 3rem; height: 3rem; margin: auto; place-items: center; border-radius: 50%; background: #dcebe4; color: #267257; font-size: 1.4rem; }
+  .empty h2 { margin-bottom: 0.25rem; font-family: var(--font-display); }
+  .empty p { margin: 0; color: #65706c; font-size: 0.8rem; }
+  @media (max-width: 680px) {
+    .moderation { padding-top: 2.5rem; }
+    .moderation__heading { align-items: flex-start; flex-direction: column; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .report__top { flex-direction: column; }
+    .report__details { grid-template-columns: 1fr; }
+    .report__details .report__message { grid-column: auto; }
+    .actions button { flex: 1 1 9rem; }
+  }
+</style>

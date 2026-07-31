@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import LegalFooter from '../../components/LegalFooter.astro';
+import { isAdmin } from '../../lib/moderation.js';
 import { getEditableProfile } from '../../lib/profiles.js';
 
 export const prerender = false;
@@ -10,6 +11,7 @@ if (!user) return Astro.redirect('/login');
 
 const profile = await getEditableProfile(user.id);
 if (!profile) return Astro.redirect('/login');
+const admin = isAdmin(user);
 
 const links = Array.from({ length: 6 }, (_, index) => (
   profile.links[index] || { title: '', url: '', enabled: true }
@@ -28,7 +30,8 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
   <header class="app-header">
     <a class="brand" href="/"><span>T</span>Trazli</a>
     <div class="app-header__actions">
-      <a class="view-profile-link" href={`/${profile.slug}`} target="_blank">Ver mi página ↗</a>
+      {!profile.suspended_at && <a class="view-profile-link" href={`/${profile.slug}`} target="_blank">Ver mi página ↗</a>}
+      {admin && <a href="/admin">Moderación</a>}
       <a href="/app/cuenta">Cuenta</a>
       <form action="/api/auth/logout" method="post">
         <button type="submit">Salir</button>
@@ -45,11 +48,18 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
       </div>
 
       {error && <p class="notice" role="alert">{error}</p>}
-      {saved && <p class="notice notice--success">Cambios guardados y publicados.</p>}
+      {saved && <p class="notice notice--success">Cambios guardados.</p>}
       {welcome && <p class="notice notice--success">Tu página ya existe. Ahora dale tu estilo.</p>}
       {verified && <p class="notice notice--success">Correo verificado. Ya puedes publicar tu página.</p>}
       {verificationSent && <p class="notice notice--success">Te hemos enviado un nuevo enlace de verificación.</p>}
       {passwordReset && <p class="notice notice--success">Contraseña actualizada y sesiones anteriores cerradas.</p>}
+      {profile.suspended_at && (
+        <p class="notice suspension-notice" role="alert">
+          Tu perfil está oculto por moderación y no puede publicarse ahora.
+          {profile.suspension_reason && <> Motivo: {profile.suspension_reason}</>}
+          {' '}Si crees que se trata de un error, escribe a <a href="mailto:hola@trazli.com">hola@trazli.com</a>.
+        </p>
+      )}
 
       {!user.email_verified_at && (
         <section class="verify-card">
@@ -209,10 +219,12 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
       <section class="publish-card">
         <div>
           <h2>Página visible</h2>
-          <p>Si la desactivas, nadie podrá verla aunque tenga el enlace.</p>
+          <p>{profile.suspended_at
+            ? 'La publicación está bloqueada hasta que finalice la revisión.'
+            : 'Si la desactivas, nadie podrá verla aunque tenga el enlace.'}</p>
         </div>
         <label class="switch switch--large">
-          <input name="published" type="checkbox" checked={profile.published} />
+          <input name="published" type="checkbox" checked={profile.published} disabled={Boolean(profile.suspended_at)} />
           <span></span>
         </label>
       </section>
@@ -704,6 +716,9 @@ const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:
   .switch--large span::after { width: 1.3rem; height: 1.3rem; }
   .switch--large input:checked + span::after { transform: translateX(1.3rem); }
   .publish-card { display: flex; align-items: center; justify-content: space-between; }
+  .suspension-notice { border-color: #d8917f; background: #fff0ec; color: #7c291b; line-height: 1.55; }
+  .suspension-notice a { color: inherit; font-weight: 800; }
+  .switch input:disabled + span { opacity: 0.45; cursor: not-allowed; }
   .save-bar {
     position: sticky;
     z-index: 10;

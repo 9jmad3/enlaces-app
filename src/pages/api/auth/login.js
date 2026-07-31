@@ -31,7 +31,10 @@ export async function POST({ request, cookies, redirect }) {
   const email = normalizeEmail(form.get('email'));
   const password = String(form.get('password') || '');
   const requestedNext = String(form.get('next') || '');
-  const next = requestedNext === '/app' || requestedNext.startsWith('/app/')
+  const next = requestedNext === '/app'
+    || requestedNext.startsWith('/app/')
+    || requestedNext === '/admin'
+    || requestedNext.startsWith('/admin/')
     ? requestedNext
     : '/app';
 

@@ -118,7 +118,9 @@ export async function getSessionUser(token) {
        u.pending_email,
        p.id AS profile_id,
        p.slug,
-       p.display_name
+       p.display_name,
+       p.suspended_at,
+       p.suspension_reason
      FROM sessions s
      JOIN users u ON u.id = s.user_id
      JOIN profiles p ON p.user_id = u.id

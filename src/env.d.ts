@@ -11,6 +11,8 @@ declare namespace App {
       profile_id: string;
       slug: string;
       display_name: string;
+      suspended_at: Date | null;
+      suspension_reason: string | null;
     } | null;
   }
 }

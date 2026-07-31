@@ -31,11 +31,12 @@ function mapFallback(profile) {
 export async function getPublicProfile(slug) {
   if (hasDatabase()) {
     const result = await query(
-      'SELECT * FROM profiles WHERE slug = $1 AND published = TRUE',
+      `SELECT * FROM profiles
+       WHERE slug = $1`,
       [slug],
     );
     const profile = result.rows[0];
-    if (profile) {
+    if (profile?.published && !profile.suspended_at) {
       const links = await query(
         `SELECT id, title, url, enabled, position
          FROM profile_links
@@ -45,6 +46,7 @@ export async function getPublicProfile(slug) {
       );
       return { ...profile, links: links.rows };
     }
+    if (profile) return null;
   }
 
   return mapFallback(fallbackProfiles.find((profile) => profile.slug === slug));
@@ -58,16 +60,19 @@ export async function getPublishedProfiles() {
 
   if (!hasDatabase()) return fallback;
 
-  const result = await query(
-    `SELECT slug, updated_at
-     FROM profiles
-     WHERE published = TRUE
-     ORDER BY slug`,
-  );
-  const databaseSlugs = new Set(result.rows.map((profile) => profile.slug));
+  const [publishedResult, existingResult] = await Promise.all([
+    query(
+      `SELECT slug, updated_at
+       FROM profiles
+       WHERE published = TRUE AND suspended_at IS NULL
+       ORDER BY slug`,
+    ),
+    query('SELECT slug FROM profiles'),
+  ]);
+  const databaseSlugs = new Set(existingResult.rows.map((profile) => profile.slug));
 
   return [
-    ...result.rows,
+    ...publishedResult.rows,
     ...fallback.filter((profile) => !databaseSlugs.has(profile.slug)),
   ];
 }
@@ -81,7 +86,9 @@ export async function getPublicProfileAvatar(profileId) {
     `SELECT a.content_type, a.content, a.etag
      FROM profile_avatars a
      JOIN profiles p ON p.id = a.profile_id
-     WHERE a.profile_id = $1 AND p.published = TRUE`,
+     WHERE a.profile_id = $1
+       AND p.published = TRUE
+       AND p.suspended_at IS NULL`,
     [profileId],
   );
 
@@ -175,7 +182,7 @@ export async function saveProfile(userId, data) {
          background_color = $7,
          accent_color = $8,
          text_color = $9,
-         published = $10,
+         published = CASE WHEN suspended_at IS NULL THEN $10 ELSE FALSE END,
          updated_at = NOW()
        WHERE id = $11`,
       [

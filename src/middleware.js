@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { getSessionUser, SESSION_COOKIE } from './lib/auth.js';
+import { isAdmin } from './lib/moderation.js';
 
 export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.user = null;
@@ -16,6 +17,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (context.url.pathname.startsWith('/app') && !context.locals.user) {
     const next = encodeURIComponent(context.url.pathname);
     return context.redirect(`/login?next=${next}`);
+  }
+
+  if (context.url.pathname.startsWith('/admin')) {
+    if (!context.locals.user) {
+      return context.redirect('/login?next=/admin');
+    }
+    if (!isAdmin(context.locals.user)) {
+      return new Response('Página no encontrada', { status: 404 });
+    }
   }
 
   const response = await next();
