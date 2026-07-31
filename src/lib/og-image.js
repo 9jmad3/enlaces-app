@@ -19,6 +19,15 @@ function safeColor(value, fallback) {
   return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? value : fallback;
 }
 
+function readableTextColor(background) {
+  const [red, green, blue] = background
+    .slice(1)
+    .match(/.{2}/g)
+    .map((part) => Number.parseInt(part, 16));
+  const brightness = ((red * 299) + (green * 587) + (blue * 114)) / 1000;
+  return brightness > 145 ? '#17201D' : '#FFFFFF';
+}
+
 function initials(name) {
   return String(name || 'Trazli')
     .trim()
@@ -112,6 +121,7 @@ export async function renderProfileOgImage(profile, avatar = null) {
   const background = safeColor(profile.background_color, '#EEF3F1');
   const accent = safeColor(profile.accent_color, '#E65336');
   const foreground = safeColor(profile.text_color, '#17201D');
+  const buttonText = readableTextColor(accent);
   const displayName = String(profile.display_name || 'Trazli').trim().slice(0, 60);
   const tagline = String(profile.tagline || profile.bio || 'Todo lo tuyo, en un solo enlace.')
     .trim()
@@ -199,10 +209,11 @@ export async function renderProfileOgImage(profile, avatar = null) {
         x: 492,
         y: 523,
         size: 21,
-        fill: background,
+        fill: buttonText,
         anchor: 'middle',
       })}
-      <path d="M560 519 L574 505 M563 505 H574 V516" fill="none" stroke="${background}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M560 519 L574 505 M563 505 H574 V516" fill="none" stroke="${buttonText}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="946" y="535" width="192" height="76" rx="24" fill="${background}" opacity=".96"/>
       <g transform="translate(965 548)">
         <rect width="52" height="52" rx="15" fill="${foreground}"/>
       </g>
