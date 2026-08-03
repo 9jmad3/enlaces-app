@@ -138,10 +138,12 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
                 </label>
               )}
             </div>
+            <input type="hidden" name="avatarPositionX" value={profile.avatar_position_x ?? 50} />
+            <input type="hidden" name="avatarPositionY" value={profile.avatar_position_y ?? 20} />
             <div class="avatar-position" data-avatar-position-controls hidden={!profile.avatar_url}>
               <div class="avatar-position__heading">
-                <strong>Encuadre</strong>
-                <span>Mueve el punto focal y comprueba los tres formatos antes de guardar.</span>
+                <strong>Vista previa de la foto</strong>
+                <span>Comprueba cómo se verá en cada plantilla antes de guardar.</span>
               </div>
               <div class="avatar-crops" aria-label="Vista previa del encuadre">
                 <figure class="avatar-crop avatar-crop--portrait">
@@ -162,32 +164,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
                   </div>
                   <figcaption>Frame</figcaption>
                 </figure>
-              </div>
-              <div class="avatar-position__sliders">
-                <label>
-                  <span>Horizontal <output data-avatar-position-value="x">{profile.avatar_position_x ?? 50}%</output></span>
-                  <input
-                    type="range"
-                    name="avatarPositionX"
-                    min="0"
-                    max="100"
-                    value={profile.avatar_position_x ?? 50}
-                    data-avatar-position="x"
-                  />
-                  <small><i>Izquierda</i><i>Derecha</i></small>
-                </label>
-                <label>
-                  <span>Vertical <output data-avatar-position-value="y">{profile.avatar_position_y ?? 20}%</output></span>
-                  <input
-                    type="range"
-                    name="avatarPositionY"
-                    min="0"
-                    max="100"
-                    value={profile.avatar_position_y ?? 20}
-                    data-avatar-position="y"
-                  />
-                  <small><i>Arriba</i><i>Abajo</i></small>
-                </label>
               </div>
             </div>
           </div>
@@ -406,10 +382,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   const uploadPreview = document.querySelector<HTMLElement>('[data-upload-preview]');
   const avatarFileName = document.querySelector<HTMLElement>('[data-avatar-file-name]');
   const avatarPositionControls = document.querySelector<HTMLElement>('[data-avatar-position-controls]');
-  const avatarPositionX = document.querySelector<HTMLInputElement>('[data-avatar-position="x"]');
-  const avatarPositionY = document.querySelector<HTMLInputElement>('[data-avatar-position="y"]');
-  const avatarPositionValueX = document.querySelector<HTMLOutputElement>('[data-avatar-position-value="x"]');
-  const avatarPositionValueY = document.querySelector<HTMLOutputElement>('[data-avatar-position-value="y"]');
   const currentAvatar = avatarUploader?.dataset.currentAvatar || '';
   let avatarObjectUrl = '';
 
@@ -442,20 +414,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     }
   };
 
-  const updateAvatarPosition = () => {
-    const x = `${avatarPositionX?.value || 50}%`;
-    const y = `${avatarPositionY?.value || 20}%`;
-    avatarUploader?.style.setProperty('--avatar-x', x);
-    previewPhone?.style.setProperty('--preview-avatar-x', x);
-    previewPhone?.style.setProperty('--preview-avatar-y', y);
-    avatarUploader?.style.setProperty('--avatar-y', y);
-    if (avatarPositionValueX) avatarPositionValueX.value = x;
-    if (avatarPositionValueY) avatarPositionValueY.value = y;
-  };
-
-  avatarPositionX?.addEventListener('input', updateAvatarPosition);
-  avatarPositionY?.addEventListener('input', updateAvatarPosition);
-
   avatarInput?.addEventListener('change', () => {
     if (avatarObjectUrl) URL.revokeObjectURL(avatarObjectUrl);
     const file = avatarInput.files?.[0];
@@ -471,7 +429,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     if (avatarFileName) avatarFileName.textContent = file.name;
     if (avatarPositionControls) avatarPositionControls.hidden = false;
     showAvatarPreview(avatarObjectUrl);
-    updateAvatarPosition();
   });
 
   removeAvatar?.addEventListener('change', () => {
@@ -484,7 +441,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
       if (avatarFileName) avatarFileName.textContent = 'Ningún archivo seleccionado';
       if (avatarPositionControls) avatarPositionControls.hidden = !currentAvatar;
       showAvatarPreview(currentAvatar);
-      updateAvatarPosition();
     }
   });
 
@@ -808,14 +764,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   .avatar-crop--circle > div { aspect-ratio: 1; border-radius: 50%; }
   .avatar-crop--frame > div { aspect-ratio: 16 / 10; border-radius: 0.2rem; }
   .avatar-crop figcaption { color: var(--muted); text-align: center; font-size: 0.58rem; font-weight: 800; }
-  .avatar-position__sliders { display: grid; padding: 0.9rem; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; border-radius: 0.8rem; background: white; }
-  .avatar-position label { display: grid; gap: 0.4rem; color: var(--muted); font-size: 0.65rem; font-weight: 750; }
-  .avatar-position label > span { display: flex; justify-content: space-between; }
-  .avatar-position output { color: var(--coral); font-weight: 900; }
-  .avatar-position input { width: 100%; accent-color: var(--coral); cursor: grab; }
-  .avatar-position input:active { cursor: grabbing; }
-  .avatar-position label small { display: flex; justify-content: space-between; color: #939b97; font-size: 0.54rem; font-weight: 500; }
-  .avatar-position label small i { font-style: normal; }
   .template-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .template-option { cursor: pointer; }
   .template-option input { position: absolute; opacity: 0; pointer-events: none; }
@@ -1114,7 +1062,6 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     .avatar-uploader__preview { width: 4.4rem; height: 4.4rem; }
     .avatar-uploader__action { align-items: flex-start; flex-direction: column; gap: 0.4rem; }
     .avatar-crops { grid-template-columns: 0.75fr 0.75fr 1.5fr; gap: 0.5rem; }
-    .avatar-position__sliders { grid-template-columns: 1fr; }
     .save-bar > span { max-width: 42%; }
     .verify-card { align-items: flex-start; flex-direction: column; }
   }
