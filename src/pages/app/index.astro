@@ -256,6 +256,64 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
         </div>
       </section>
 
+      <section class="editor-card">
+        <div class="section-title">
+          <span>04</span>
+          <div><h2>Música y vídeo</h2><p>Añade una canción de Spotify y un vídeo de YouTube.</p></div>
+        </div>
+        <div class="media-editor">
+          <article class="media-editor__item media-editor__item--spotify">
+            <div class="media-editor__heading">
+              <span class="media-editor__icon" aria-hidden="true">♫</span>
+              <div><strong>Spotify</strong><small>Una canción</small></div>
+              <label class="switch" title="Mostrar canción de Spotify">
+                <input name="spotifyEnabled" type="checkbox" checked={profile.spotify_enabled} data-media-enabled="spotify" />
+                <span></span>
+              </label>
+            </div>
+            <div class="field">
+              <label for="spotifyUrl">Enlace de la canción</label>
+              <input
+                id="spotifyUrl"
+                name="spotifyUrl"
+                type="text"
+                inputmode="url"
+                autocomplete="url"
+                value={profile.spotify_url || ''}
+                placeholder="https://open.spotify.com/track/..."
+                data-media-url="spotify"
+              />
+              <small class="field__hint">Abre la canción en Spotify, pulsa Compartir y copia el enlace.</small>
+            </div>
+          </article>
+
+          <article class="media-editor__item media-editor__item--youtube">
+            <div class="media-editor__heading">
+              <span class="media-editor__icon" aria-hidden="true">▶</span>
+              <div><strong>YouTube</strong><small>Un vídeo o Short</small></div>
+              <label class="switch" title="Mostrar vídeo de YouTube">
+                <input name="youtubeEnabled" type="checkbox" checked={profile.youtube_enabled} data-media-enabled="youtube" />
+                <span></span>
+              </label>
+            </div>
+            <div class="field">
+              <label for="youtubeUrl">Enlace del vídeo</label>
+              <input
+                id="youtubeUrl"
+                name="youtubeUrl"
+                type="text"
+                inputmode="url"
+                autocomplete="url"
+                value={profile.youtube_url || ''}
+                placeholder="https://youtu.be/..."
+                data-media-url="youtube"
+              />
+              <small class="field__hint">Puedes pegar un vídeo normal, un Short o un enlace de YouTube Music.</small>
+            </div>
+          </article>
+        </div>
+      </section>
+
       <section class="publish-card">
         <div>
           <h2>Página visible</h2>
@@ -300,6 +358,14 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
             </div>
           </div>
           <p class="preview-bio" data-preview-bio>{profile.bio}</p>
+          <div class="preview-media" aria-label="Vista previa multimedia">
+            <span data-preview-media="spotify" hidden={!profile.spotify_enabled || !profile.spotify_url}>
+              <i aria-hidden="true">♫</i><b><small>Spotify</small>Escuchar canción</b><em>▶</em>
+            </span>
+            <span data-preview-media="youtube" hidden={!profile.youtube_enabled || !profile.youtube_url}>
+              <i aria-hidden="true">▶</i><b><small>YouTube</small>Ver vídeo</b><em>▶</em>
+            </span>
+          </div>
           <div class="preview-links" data-preview-links>
             {links.filter((link) => link.enabled && link.title && link.url).map((link, index) => (
               <span><small>{String(index + 1).padStart(2, '0')}</small><b>{link.title}</b><i>↗</i></span>
@@ -338,6 +404,20 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
         setText('[data-preview-bio]', value);
       }
     });
+  });
+
+  const updateMediaPreview = (platform: 'spotify' | 'youtube') => {
+    const input = document.querySelector<HTMLInputElement>(`[data-media-url="${platform}"]`);
+    const enabled = document.querySelector<HTMLInputElement>(`[data-media-enabled="${platform}"]`);
+    const preview = document.querySelector<HTMLElement>(`[data-preview-media="${platform}"]`);
+    if (preview) preview.hidden = !input?.value.trim() || !enabled?.checked;
+  };
+
+  (['spotify', 'youtube'] as const).forEach((platform) => {
+    document.querySelector<HTMLInputElement>(`[data-media-url="${platform}"]`)
+      ?.addEventListener('input', () => updateMediaPreview(platform));
+    document.querySelector<HTMLInputElement>(`[data-media-enabled="${platform}"]`)
+      ?.addEventListener('change', () => updateMediaPreview(platform));
   });
 
   const slugInput = document.querySelector<HTMLInputElement>('#slug');
@@ -832,6 +912,15 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   .link-fields { display: grid; grid-template-columns: 0.75fr 1.25fr; overflow: hidden; border: 1px solid var(--line); border-radius: 0.8rem; background: white; }
   .link-fields input { min-width: 0; height: 2.8rem; padding: 0 0.75rem; border: 0; outline: 0; color: var(--ink); }
   .link-fields input + input { border-left: 1px solid var(--line); }
+  .media-editor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+  .media-editor__item { display: grid; min-width: 0; padding: 1rem; gap: 0.9rem; border: 1px solid var(--line); border-radius: 1rem; background: #fbfaf6; }
+  .media-editor__heading { display: grid; grid-template-columns: 2.6rem 1fr auto; align-items: center; gap: 0.7rem; }
+  .media-editor__heading > div { display: grid; gap: 0.05rem; }
+  .media-editor__heading strong { font-size: 0.82rem; }
+  .media-editor__heading small { color: var(--muted); font-size: 0.62rem; }
+  .media-editor__icon { display: grid; width: 2.6rem; height: 2.6rem; place-items: center; border-radius: 50%; color: white; font-size: 0.95rem; font-weight: 900; }
+  .media-editor__item--spotify .media-editor__icon { background: #1ed760; color: #092b16; }
+  .media-editor__item--youtube .media-editor__icon { border-radius: 0.7rem; background: #ff0033; }
   .switch { position: relative; display: inline-flex; cursor: pointer; }
   .switch input { position: absolute; opacity: 0; }
   .switch span { position: relative; width: 2.5rem; height: 1.45rem; border-radius: 999px; background: #cdd1cf; transition: background 160ms ease; }
@@ -909,6 +998,24 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   .preview-profile h2 { margin: 0.15rem 0; font-family: var(--font-display); font-size: 2rem; letter-spacing: -0.06em; line-height: 0.85; }
   .preview-profile p { margin: 0.3rem 0 0; font-size: 0.55rem; font-weight: 700; }
   .preview-bio { margin: 1.2rem 0; opacity: 0.75; font-size: 0.66rem; line-height: 1.5; }
+  .preview-media { display: grid; margin-bottom: 0.5rem; gap: 0.5rem; }
+  .preview-media :global(span) {
+    display: grid;
+    min-height: 3.1rem;
+    padding: 0.5rem 0.6rem;
+    grid-template-columns: 1.7rem 1fr auto;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid var(--soft);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--preview-bg) 82%, white);
+  }
+  .preview-media :global([hidden]) { display: none; }
+  .preview-media :global(span > i) { display: grid; width: 1.7rem; height: 1.7rem; place-items: center; border-radius: 50%; background: #1ed760; color: #092b16; font-size: 0.65rem; font-style: normal; font-weight: 900; }
+  .preview-media :global(span[data-preview-media='youtube'] > i) { border-radius: 0.45rem; background: #ff0033; color: white; }
+  .preview-media :global(b) { display: grid; font-size: 0.57rem; }
+  .preview-media :global(b small) { opacity: 0.55; font-size: 0.44rem; letter-spacing: 0.06em; text-transform: uppercase; }
+  .preview-media :global(em) { font-size: 0.55rem; font-style: normal; }
   .preview-links { display: grid; gap: 0.5rem; }
   .preview-links :global(span) {
     display: grid;
@@ -933,6 +1040,7 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   .preview-phone--pulse .preview-avatar { width: 6rem; height: 6rem; border: 4px solid var(--preview-text); border-radius: 50%; box-shadow: 6px 6px 0 var(--preview-accent); }
   .preview-phone--pulse .preview-profile h2 { font-family: var(--font-body); font-weight: 900; text-transform: uppercase; }
   .preview-phone--pulse .preview-bio { text-align: center; }
+  .preview-phone--pulse .preview-media :global(span) { border: 2px solid var(--preview-text); border-radius: 0; background: var(--preview-accent); box-shadow: 4px 4px 0 var(--preview-text); }
   .preview-phone--pulse .preview-links :global(span) { border: 2px solid var(--preview-text); border-radius: 0; background: var(--preview-accent); box-shadow: 4px 4px 0 var(--preview-text); }
   .preview-phone--aura .preview-phone__screen {
     padding-inline: 1.15rem;
@@ -977,6 +1085,8 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     text-align: center;
   }
   .preview-phone--aura .preview-links { margin-top: 0.75rem; gap: 0.65rem; }
+  .preview-phone--aura .preview-media { margin-top: 0.75rem; }
+  .preview-phone--aura .preview-media :global(span) { border-color: color-mix(in srgb, white 65%, var(--preview-text) 12%); border-radius: 1rem; background: color-mix(in srgb, var(--preview-bg) 55%, transparent); backdrop-filter: blur(10px); }
   .preview-phone--aura .preview-links :global(span) {
     min-height: 3.4rem;
     border-color: color-mix(in srgb, white 65%, var(--preview-text) 12%);
@@ -1026,6 +1136,9 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     background: color-mix(in srgb, var(--preview-bg) 92%, white);
   }
   .preview-phone--frame .preview-links { gap: 0; }
+  .preview-phone--frame .preview-media { margin: 0; gap: 0; }
+  .preview-phone--frame .preview-media :global(span) { border: 3px solid var(--preview-text); border-radius: 0; background: color-mix(in srgb, var(--preview-bg) 92%, white); }
+  .preview-phone--frame .preview-media :global(span + span) { border-top: 0; }
   .preview-phone--frame .preview-links :global(span) {
     min-height: 3.5rem;
     border: 3px solid var(--preview-text);
@@ -1058,6 +1171,7 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
     .link-row { grid-template-columns: 1rem minmax(0, 1fr) auto auto; gap: 0.35rem; }
     .link-fields { grid-template-columns: 1fr; }
     .link-fields input + input { border-top: 1px solid var(--line); border-left: 0; }
+    .media-editor { grid-template-columns: 1fr; }
     .avatar-uploader { grid-template-columns: 4.4rem minmax(0, 1fr); padding: 0.75rem; gap: 0.75rem; }
     .avatar-uploader__preview { width: 4.4rem; height: 4.4rem; }
     .avatar-uploader__action { align-items: flex-start; flex-direction: column; gap: 0.4rem; }

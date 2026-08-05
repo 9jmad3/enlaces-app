@@ -1,6 +1,7 @@
 ---
 import LinkIcon from './LinkIcon.astro';
 import LegalFooter from './LegalFooter.astro';
+import { getSpotifyEmbedUrl, getYouTubeEmbedUrl } from '../lib/media.js';
 
 interface ProfileLink {
   id: string;
@@ -24,6 +25,10 @@ interface Profile {
   background_color: string;
   accent_color: string;
   text_color: string;
+  spotify_url?: string;
+  spotify_enabled?: boolean;
+  youtube_url?: string;
+  youtube_enabled?: boolean;
   links: ProfileLink[];
 }
 
@@ -40,6 +45,8 @@ const canReport = !isOwner && !profile.id.startsWith('fallback-');
 const reported = Astro.url.searchParams.has('reported');
 const reportError = Astro.url.searchParams.has('reportError');
 const reportLimited = Astro.url.searchParams.has('reportLimited');
+const spotifyEmbedUrl = profile.spotify_enabled ? getSpotifyEmbedUrl(profile.spotify_url) : '';
+const youtubeEmbedUrl = profile.youtube_enabled ? getYouTubeEmbedUrl(profile.youtube_url) : '';
 const initials = profile.display_name
   .split(/\s+/)
   .slice(0, 2)
@@ -81,6 +88,43 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     </header>
 
     {profile.bio && <p class="bio">{profile.bio}</p>}
+
+    {(spotifyEmbedUrl || youtubeEmbedUrl) && (
+      <section class="profile-media" aria-label={`Contenido multimedia de ${profile.display_name}`}>
+        {spotifyEmbedUrl && (
+          <article class="media-card media-card--spotify" data-media-container>
+            <button
+              type="button"
+              data-media-load
+              data-embed-src={spotifyEmbedUrl}
+              data-embed-title={`Canción de Spotify de ${profile.display_name}`}
+              data-embed-platform="spotify"
+            >
+              <span class="media-mark" aria-hidden="true">♫</span>
+              <span><small>Spotify · contenido externo</small><strong>Escuchar canción</strong></span>
+              <i aria-hidden="true">▶</i>
+            </button>
+            <noscript><a href={profile.spotify_url} target="_blank" rel="nofollow noopener noreferrer">Abrir canción en Spotify</a></noscript>
+          </article>
+        )}
+        {youtubeEmbedUrl && (
+          <article class="media-card media-card--youtube" data-media-container>
+            <button
+              type="button"
+              data-media-load
+              data-embed-src={youtubeEmbedUrl}
+              data-embed-title={`Vídeo de YouTube de ${profile.display_name}`}
+              data-embed-platform="youtube"
+            >
+              <span class="media-mark" aria-hidden="true">▶</span>
+              <span><small>YouTube · contenido externo</small><strong>Ver vídeo</strong></span>
+              <i aria-hidden="true">▶</i>
+            </button>
+            <noscript><a href={profile.youtube_url} target="_blank" rel="nofollow noopener noreferrer">Abrir vídeo en YouTube</a></noscript>
+          </article>
+        )}
+      </section>
+    )}
 
     <nav class="profile-links" aria-label={`Enlaces de ${profile.display_name}`}>
       {profile.links.map((link) => (
@@ -170,6 +214,25 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     } catch {
       // El usuario puede cancelar el dialogo de compartir.
     }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-media-load]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const container = button.closest<HTMLElement>('[data-media-container]');
+      const source = button.dataset.embedSrc;
+      if (!container || !source) return;
+
+      const iframe = document.createElement('iframe');
+      iframe.src = source;
+      iframe.title = button.dataset.embedTitle || 'Reproductor multimedia';
+      iframe.loading = 'lazy';
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      iframe.allowFullscreen = true;
+      iframe.allow = button.dataset.embedPlatform === 'spotify'
+        ? 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
+        : 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      container.replaceChildren(iframe);
+    }, { once: true });
   });
 
   const reportDialog = document.querySelector<HTMLDialogElement>('[data-report-dialog]');
@@ -300,6 +363,48 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     font-size: 0.95rem;
     line-height: 1.65;
   }
+  .profile-media { display: grid; margin: 1.4rem 0; gap: 0.72rem; }
+  .media-card {
+    overflow: hidden;
+    border: 1px solid var(--soft-contrast);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--profile-bg) 84%, white);
+    box-shadow: 0 9px 22px color-mix(in srgb, var(--profile-text) 6%, transparent);
+  }
+  .media-card button {
+    display: grid;
+    width: 100%;
+    min-height: 4.3rem;
+    padding: 0.7rem 0.85rem;
+    grid-template-columns: 2.6rem 1fr auto;
+    align-items: center;
+    gap: 0.7rem;
+    border: 0;
+    background: transparent;
+    color: var(--profile-text);
+    text-align: left;
+    cursor: pointer;
+  }
+  .media-card button > span:nth-child(2) { display: grid; gap: 0.12rem; }
+  .media-card small { color: color-mix(in srgb, var(--profile-text) 58%, transparent); font-size: 0.58rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+  .media-card strong { font-size: 0.86rem; }
+  .media-card button > i { font-size: 0.72rem; font-style: normal; }
+  .media-mark {
+    display: grid;
+    width: 2.6rem;
+    height: 2.6rem;
+    place-items: center;
+    border-radius: 50%;
+    color: white;
+    font-size: 1rem;
+    font-weight: 900;
+  }
+  .media-card--spotify .media-mark { background: #1ed760; color: #092b16; }
+  .media-card--youtube .media-mark { border-radius: 0.75rem; background: #ff0033; }
+  .media-card iframe { display: block; width: 100%; border: 0; background: #101010; }
+  .media-card--spotify iframe { height: 152px; }
+  .media-card--youtube iframe { aspect-ratio: 16 / 9; }
+  .media-card noscript a { display: block; padding: 0.8rem; color: inherit; }
   .profile-links { display: grid; gap: 0.72rem; }
   .profile-links a {
     display: grid;
@@ -480,6 +585,12 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     background: var(--profile-accent);
     box-shadow: 6px 6px 0 var(--profile-text);
   }
+  .profile-page--pulse .media-card {
+    border: 2px solid var(--profile-text);
+    border-radius: 0;
+    background: var(--profile-accent);
+    box-shadow: 4px 4px 0 var(--profile-text);
+  }
   .profile-page--pulse .profile-links a:nth-child(even) {
     background: color-mix(in srgb, var(--profile-bg) 82%, white);
   }
@@ -555,6 +666,12 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     text-align: center;
   }
   .profile-page--aura .profile-links { gap: 0.85rem; }
+  .profile-page--aura .media-card {
+    border-color: color-mix(in srgb, white 65%, var(--profile-text) 12%);
+    border-radius: 1.2rem;
+    background: color-mix(in srgb, var(--profile-bg) 55%, transparent);
+    backdrop-filter: blur(10px);
+  }
   .profile-page--aura .profile-links a {
     min-height: 4.65rem;
     border-color: color-mix(in srgb, white 48%, var(--profile-text) 15%);
@@ -649,6 +766,14 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     color: var(--profile-text);
   }
   .profile-page--frame .profile-links { gap: 0; }
+  .profile-page--frame .profile-media { gap: 0; }
+  .profile-page--frame .media-card {
+    border: 3px solid var(--profile-text);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--profile-bg) 92%, white);
+    box-shadow: none;
+  }
+  .profile-page--frame .media-card + .media-card { border-top: 0; }
   .profile-page--frame .profile-links a {
     min-height: 5rem;
     padding: 0.9rem 1.25rem;

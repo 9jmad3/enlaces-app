@@ -6,6 +6,7 @@ import {
   parseAvatarUpload,
 } from '../../../lib/avatar.js';
 import { normalizeSlug, safeUrl, validateSlug } from '../../../lib/validation.js';
+import { normalizeSpotifyTrackUrl, normalizeYouTubeVideoUrl } from '../../../lib/media.js';
 import { sameOrigin } from '../../../lib/security.js';
 
 export const prerender = false;
@@ -30,6 +31,8 @@ export async function POST({ request, locals, redirect }) {
   const displayName = String(form.get('displayName') || '').trim();
   const tagline = String(form.get('tagline') || '').trim();
   const bio = String(form.get('bio') || '').trim();
+  const rawSpotifyUrl = String(form.get('spotifyUrl') || '').trim();
+  const rawYouTubeUrl = String(form.get('youtubeUrl') || '').trim();
 
   const slugError = validateSlug(slug);
   if (slugError) return redirect(panelError(slugError));
@@ -38,6 +41,15 @@ export async function POST({ request, locals, redirect }) {
   }
   if (tagline.length > 100 || bio.length > 280) {
     return redirect(panelError('Revisa la longitud de la descripcion y la biografia.'));
+  }
+
+  const spotifyUrl = normalizeSpotifyTrackUrl(rawSpotifyUrl);
+  const youtubeUrl = normalizeYouTubeVideoUrl(rawYouTubeUrl);
+  if (rawSpotifyUrl && !spotifyUrl) {
+    return redirect(panelError('El enlace de Spotify debe pertenecer a una cancion.'));
+  }
+  if (rawYouTubeUrl && !youtubeUrl) {
+    return redirect(panelError('El enlace de YouTube no corresponde a un video valido.'));
   }
 
   const links = [];
@@ -91,6 +103,10 @@ export async function POST({ request, locals, redirect }) {
       backgroundColor: String(form.get('backgroundColor') || ''),
       accentColor: String(form.get('accentColor') || ''),
       textColor: String(form.get('textColor') || ''),
+      spotifyUrl,
+      spotifyEnabled: Boolean(spotifyUrl) && form.get('spotifyEnabled') === 'on',
+      youtubeUrl,
+      youtubeEnabled: Boolean(youtubeUrl) && form.get('youtubeEnabled') === 'on',
       published: form.get('published') === 'on',
       links,
     });
