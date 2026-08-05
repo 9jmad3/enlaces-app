@@ -39,6 +39,18 @@ const mediaPreviewUrls = {
   youtube: getYouTubeEmbedUrl(profile.youtube_url),
 };
 const iframeNoScroll = { scrolling: 'no' };
+const getPreviewLinkIcon = (title: string, value: string) => {
+  const label = title.toLowerCase();
+  try {
+    const hostname = new URL(value).hostname.replace(/^www\./, '').toLowerCase();
+    if (hostname.includes('instagram.com') || label.includes('instagram')) return '◎';
+    if (hostname.includes('tiktok.com') || label.includes('tiktok')) return '♪';
+    if (hostname.includes('youtube.com') || hostname === 'youtu.be' || label.includes('youtube')) return '▶';
+  } catch {
+    // A generic web icon keeps the preview stable while the URL is incomplete.
+  }
+  return '⊙';
+};
 ---
 
 <Layout title="Mi panel | Trazli" description="Configura y publica tu página de Trazli." bodyClass="dashboard-body">
@@ -348,11 +360,11 @@ const iframeNoScroll = { scrolling: 'no' };
               <p data-preview-tagline>{profile.tagline}</p>
             </div>
           </div>
-          <p class="preview-bio" data-preview-bio>{profile.bio}</p>
+          <p class="preview-bio" data-preview-bio hidden={!profile.bio}>{profile.bio}</p>
           <div class="preview-links" data-preview-content>
             {contentItems.map((item) => item.kind === 'link'
               ? item.link.enabled && item.link.title && item.link.url && (
-                  <span><small>{String(item.index + 1).padStart(2, '0')}</small><b>{item.link.title}</b><i>↗</i></span>
+                  <span><small class="preview-link-icon" aria-hidden="true">{getPreviewLinkIcon(item.link.title, item.link.url)}</small><b>{item.link.title}</b><i>↗</i></span>
                 )
               : (item.kind === 'spotify' ? profile.spotify_enabled : profile.youtube_enabled) && mediaPreviewUrls[item.kind] && (
                   <article class={`preview-player preview-player--${item.kind}`} data-preview-media={item.kind}>
@@ -380,6 +392,19 @@ const iframeNoScroll = { scrolling: 'no' };
 <script>
   import { getSpotifyEmbedUrl, getYouTubeEmbedUrl } from '../../lib/media.js';
 
+  const getPreviewLinkIcon = (title: string, value: string) => {
+    const label = title.toLowerCase();
+    try {
+      const hostname = new URL(value).hostname.replace(/^www\./, '').toLowerCase();
+      if (hostname.includes('instagram.com') || label.includes('instagram')) return '◎';
+      if (hostname.includes('tiktok.com') || label.includes('tiktok')) return '♪';
+      if (hostname.includes('youtube.com') || hostname === 'youtu.be' || label.includes('youtube')) return '▶';
+    } catch {
+      // Keep showing a neutral web icon while the user finishes the URL.
+    }
+    return '⊙';
+  };
+
   const previewPhone = document.querySelector<HTMLElement>('.preview-phone');
   const getField = (selector: string) => document.querySelector<HTMLInputElement>(selector);
   const setText = (selector: string, value: string) => {
@@ -401,6 +426,8 @@ const iframeNoScroll = { scrolling: 'no' };
         setText('[data-preview-tagline]', value);
       } else if (key === 'bio') {
         setText('[data-preview-bio]', value);
+        const bio = document.querySelector<HTMLElement>('[data-preview-bio]');
+        if (bio) bio.hidden = !value.trim();
       }
     });
   });
@@ -539,7 +566,6 @@ const iframeNoScroll = { scrolling: 'no' };
     if (!target) return;
     target.innerHTML = '';
     const rows = document.querySelectorAll<HTMLElement>('[data-content-row]');
-    let linkCount = 0;
     for (const row of rows) {
       const platform = row.dataset.mediaRow as 'spotify' | 'youtube' | undefined;
       if (platform) {
@@ -572,8 +598,7 @@ const iframeNoScroll = { scrolling: 'no' };
       const enabled = getField(`[data-link-enabled="${index}"]`)?.checked;
       if (!title || !url || !enabled) continue;
       const item = document.createElement('span');
-      linkCount += 1;
-      item.innerHTML = `<small>${String(linkCount).padStart(2, '0')}</small><b></b><i>↗</i>`;
+      item.innerHTML = `<small class="preview-link-icon" aria-hidden="true">${getPreviewLinkIcon(title, url)}</small><b></b><i>↗</i>`;
       const titleNode = item.querySelector('b');
       if (titleNode) titleNode.textContent = title;
       target.appendChild(item);
@@ -1039,6 +1064,17 @@ const iframeNoScroll = { scrolling: 'no' };
     background: color-mix(in srgb, var(--preview-bg) 82%, white);
   }
   .preview-links :global(small) { opacity: 0.45; font-size: 0.48rem; }
+  .preview-links :global(.preview-link-icon) {
+    display: grid;
+    width: 1.5rem;
+    height: 1.5rem;
+    place-items: center;
+    border: 1px solid var(--soft);
+    border-radius: 0.48rem;
+    opacity: 1;
+    font-size: 0.65rem;
+    font-weight: 850;
+  }
   .preview-links :global(b) { font-size: 0.62rem; }
   .preview-links :global(i) { display: grid; width: 1.5rem; height: 1.5rem; place-items: center; border-radius: 50%; background: var(--preview-accent); font-size: 0.65rem; font-style: normal; }
   .preview-links :global(.preview-player) {
@@ -1063,6 +1099,7 @@ const iframeNoScroll = { scrolling: 'no' };
   .preview-phone--pulse .preview-phone__screen {
     background:
       radial-gradient(circle at 0 0, var(--preview-accent) 0 18%, transparent 18.3%),
+      radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--preview-accent) 60%, white) 0 15%, transparent 15.3%),
       var(--preview-bg);
   }
   .preview-phone--pulse .preview-profile { align-items: center; flex-direction: column; text-align: center; }
@@ -1088,6 +1125,10 @@ const iframeNoScroll = { scrolling: 'no' };
     background: color-mix(in srgb, var(--preview-bg) 54%, transparent);
     text-align: center;
     backdrop-filter: blur(12px);
+  }
+  .preview-phone--aura .preview-profile:has(+ .preview-bio[hidden]) {
+    border-bottom: 1px solid color-mix(in srgb, white 65%, var(--preview-text) 12%);
+    border-radius: 1.5rem;
   }
   .preview-phone--aura .preview-avatar {
     width: 6.5rem;
@@ -1121,6 +1162,13 @@ const iframeNoScroll = { scrolling: 'no' };
     background: color-mix(in srgb, var(--preview-bg) 55%, transparent);
     backdrop-filter: blur(10px);
   }
+  .preview-phone--aura .preview-links :global(.preview-player) {
+    border-color: color-mix(in srgb, white 65%, var(--preview-text) 12%);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--preview-bg) 55%, transparent);
+  }
+  .preview-bio[hidden] + .preview-links { margin-top: 1.2rem; }
+  .preview-phone--aura .preview-bio[hidden] + .preview-links { margin-top: 0.75rem; }
   .preview-phone--frame .preview-phone__screen {
     padding: 2.5rem 0.85rem 1rem;
     background:
