@@ -208,7 +208,7 @@ const iframeNoScroll = { scrolling: 'no' };
           <label class="template-option">
             <input type="radio" name="templateId" value="frame" checked={profile.template_id === 'frame'} />
             <span class="template-preview template-preview--frame"><i></i><b>Frame</b></span>
-            <small>Visual y contundente</small>
+            <small>Fluida y dinámica</small>
           </label>
         </div>
         <div class="color-options">
@@ -853,7 +853,7 @@ const iframeNoScroll = { scrolling: 'no' };
   .avatar-crop b { font-family: var(--font-display); font-size: 1.6rem; }
   .avatar-crop--portrait > div { aspect-ratio: 4 / 5; border-radius: 0.8rem 0.8rem 0.8rem 0.2rem; }
   .avatar-crop--circle > div { aspect-ratio: 1; border-radius: 50%; }
-  .avatar-crop--frame > div { aspect-ratio: 16 / 10; border-radius: 0.2rem; }
+  .avatar-crop--frame > div { aspect-ratio: 16 / 10; border-radius: 1rem; }
   .avatar-crop figcaption { color: var(--muted); text-align: center; font-size: 0.58rem; font-weight: 800; }
   .template-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .template-option { cursor: pointer; }
@@ -887,25 +887,42 @@ const iframeNoScroll = { scrolling: 'no' };
   }
   .template-preview--aura b { font-size: 1.55rem; font-weight: 520; }
   .template-preview--frame {
-    border-radius: 0.35rem;
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.35rem;
     background:
-      linear-gradient(135deg, rgba(230, 83, 54, 0.14) 25%, transparent 25%) 0 0 / 1.3rem 1.3rem,
-      #f4efe6;
-    box-shadow: inset 0 0 0 3px var(--ink);
+      radial-gradient(circle at 15% 12%, rgba(230, 83, 54, 0.35), transparent 48%),
+      linear-gradient(145deg, #f5efe7, #dfeae5);
   }
   .template-preview--frame i {
-    width: 4.2rem;
-    height: 3.7rem;
-    border: 3px solid var(--ink);
-    border-radius: 0;
-    background: var(--coral);
-    box-shadow: 5px 5px 0 var(--ink);
+    position: relative;
+    width: 4.8rem;
+    height: 3.4rem;
+    border: 0;
+    border-radius: 1rem;
+    background: linear-gradient(145deg, var(--coral), #f0a38f);
+    box-shadow: 0 12px 25px rgba(23, 32, 29, 0.2);
+    animation: template-frame-float 4s ease-in-out infinite;
+  }
+  .template-preview--frame i::after {
+    content: '';
+    position: absolute;
+    right: 0.45rem;
+    bottom: -0.55rem;
+    width: 2.8rem;
+    height: 1.25rem;
+    border-radius: 0.55rem;
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 5px 12px rgba(23, 32, 29, 0.12);
   }
   .template-preview--frame b {
-    font-family: var(--font-body);
-    font-weight: 900;
-    letter-spacing: -0.06em;
-    text-transform: uppercase;
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+  }
+  @keyframes template-frame-float {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-0.35rem) rotate(2deg); }
   }
   .template-option input:checked + .template-preview { border-color: var(--coral); transform: translateY(-2px); }
   .template-option > small { display: block; margin-top: 0.45rem; color: var(--muted); text-align: center; font-size: 0.72rem; }
@@ -1105,65 +1122,82 @@ const iframeNoScroll = { scrolling: 'no' };
     backdrop-filter: blur(10px);
   }
   .preview-phone--frame .preview-phone__screen {
-    padding: 2.5rem 0.8rem 1rem;
+    padding: 2.5rem 0.85rem 1rem;
     background:
-      linear-gradient(135deg, color-mix(in srgb, var(--preview-accent) 12%, transparent) 25%, transparent 25%) 0 0 / 2rem 2rem,
+      radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--preview-accent) 34%, transparent), transparent 10rem),
+      radial-gradient(circle at 92% 76%, color-mix(in srgb, var(--preview-text) 12%, transparent), transparent 12rem),
       var(--preview-bg);
   }
   .preview-phone--frame .preview-profile {
+    position: relative;
     display: block;
-    border: 3px solid var(--preview-text);
-    background: color-mix(in srgb, var(--preview-bg) 92%, white);
-    box-shadow: 7px 7px 0 var(--preview-accent);
+    animation: preview-frame-enter 550ms cubic-bezier(.2,.75,.25,1) both;
   }
   .preview-phone--frame .preview-avatar {
     width: 100%;
-    height: 11rem;
+    height: 10.5rem;
     border: 0;
-    border-bottom: 3px solid var(--preview-text);
-    border-radius: 0;
+    border-radius: 1.35rem;
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--preview-text) 18%, transparent);
   }
-  .preview-phone--frame .preview-profile > div:last-child { padding: 0.8rem; }
+  .preview-phone--frame .preview-profile > div:last-child {
+    position: relative;
+    margin: -3.4rem 0.55rem 0;
+    padding: 0.75rem 0.8rem 0.8rem;
+    border: 1px solid color-mix(in srgb, white 62%, var(--preview-text) 12%);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--preview-bg) 78%, rgba(255, 255, 255, 0.7));
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--preview-text) 14%, transparent);
+    backdrop-filter: blur(12px);
+  }
   .preview-phone--frame .preview-profile small {
     display: inline-block;
     padding: 0.2rem 0.4rem;
+    border-radius: 999px;
     background: var(--preview-accent);
     color: var(--preview-text);
   }
   .preview-phone--frame .preview-profile h2 {
     margin-top: 0.45rem;
-    font-family: var(--font-body);
     font-size: 2.15rem;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-weight: 650;
   }
-  .preview-phone--frame .preview-profile p { letter-spacing: 0.05em; text-transform: uppercase; }
+  .preview-phone--frame .preview-profile p { letter-spacing: 0; }
   .preview-phone--frame .preview-bio {
-    margin: 0.9rem 0 0;
-    padding: 0.8rem;
-    border: 3px solid var(--preview-text);
-    border-bottom: 0;
-    background: color-mix(in srgb, var(--preview-bg) 92%, white);
+    margin: 1rem 0;
+    padding: 0 0.55rem;
   }
-  .preview-phone--frame .preview-links { gap: 0; }
+  .preview-phone--frame .preview-links { gap: 0.58rem; }
   .preview-phone--frame .preview-links :global(span) {
     min-height: 3.5rem;
-    border: 3px solid var(--preview-text);
-    border-radius: 0;
-    background: color-mix(in srgb, var(--preview-bg) 92%, white);
-  }
-  .preview-phone--frame .preview-links :global(span + span) { border-top: 0; }
-  .preview-phone--frame .preview-links :global(span:nth-child(even)) {
-    background: color-mix(in srgb, var(--preview-accent) 24%, var(--preview-bg));
+    border: 1px solid color-mix(in srgb, var(--preview-text) 12%, transparent);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--preview-bg) 78%, rgba(255, 255, 255, 0.7));
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--preview-text) 9%, transparent);
+    animation: preview-frame-enter 500ms cubic-bezier(.2,.75,.25,1) both;
   }
   .preview-phone--frame .preview-links :global(.preview-player) {
-    border: 3px solid var(--preview-text);
-    border-radius: 0;
+    border: 1px solid color-mix(in srgb, var(--preview-text) 12%, transparent);
+    border-radius: 1rem;
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--preview-text) 9%, transparent);
+    animation: preview-frame-enter 500ms cubic-bezier(.2,.75,.25,1) both;
   }
   .preview-phone--frame .preview-links :global(i) {
-    border: 2px solid var(--preview-text);
-    border-radius: 0;
-    background: var(--preview-bg);
+    border: 0;
+    border-radius: 50%;
+    background: var(--preview-accent);
+  }
+  :global(.preview-phone--frame .preview-links > *:nth-child(2)) { animation-delay: 70ms; }
+  :global(.preview-phone--frame .preview-links > *:nth-child(3)) { animation-delay: 140ms; }
+  :global(.preview-phone--frame .preview-links > *:nth-child(4)) { animation-delay: 210ms; }
+  @keyframes preview-frame-enter {
+    from { opacity: 0; translate: 0 0.7rem; }
+    to { opacity: 1; translate: 0 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .template-preview--frame i,
+    .preview-phone--frame .preview-profile,
+    .preview-phone--frame .preview-links :global(*) { animation: none; opacity: 1; translate: none; }
   }
   .preview-note { color: var(--muted); text-align: center; font-size: 0.68rem; }
   @media (max-width: 980px) {
