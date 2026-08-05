@@ -352,7 +352,8 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
   .profile-links { display: grid; gap: 0.72rem; }
   .profile-links a {
     display: grid;
-    grid-template-columns: 2.2rem 1fr auto;
+    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+    column-gap: 0.7rem;
     min-height: 4.3rem;
     padding: 0.8rem 1rem;
     align-items: center;
