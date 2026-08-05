@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import LegalFooter from '../../components/LegalFooter.astro';
+import { getSpotifyEmbedUrl, getYouTubeEmbedUrl } from '../../lib/media.js';
 import { isAdmin } from '../../lib/moderation.js';
 import { getEditableProfile } from '../../lib/profiles.js';
 
@@ -33,6 +34,10 @@ const verificationSent = Astro.url.searchParams.get('verificationSent');
 const passwordReset = Astro.url.searchParams.get('passwordReset');
 const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:${profile.accent_color};--preview-text:${profile.text_color};--preview-avatar-x:${profile.avatar_position_x ?? 50}%;--preview-avatar-y:${profile.avatar_position_y ?? 20}%`;
 const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:${profile.avatar_position_y ?? 20}%`;
+const mediaPreviewUrls = {
+  spotify: getSpotifyEmbedUrl(profile.spotify_url),
+  youtube: getYouTubeEmbedUrl(profile.youtube_url),
+};
 ---
 
 <Layout title="Mi panel | Trazli" description="Configura y publica tu página de Trazli." bodyClass="dashboard-body">
@@ -348,12 +353,17 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
               ? item.link.enabled && item.link.title && item.link.url && (
                   <span><small>{String(item.index + 1).padStart(2, '0')}</small><b>{item.link.title}</b><i>↗</i></span>
                 )
-              : (item.kind === 'spotify' ? profile.spotify_enabled && profile.spotify_url : profile.youtube_enabled && profile.youtube_url) && (
-                  <span data-preview-media={item.kind}>
-                    <i aria-hidden="true">{item.kind === 'spotify' ? '♫' : '▶'}</i>
-                    <b><small>{item.kind === 'spotify' ? 'Spotify' : 'YouTube'}</small>{item.kind === 'spotify' ? 'Reproductor de música' : 'Reproductor de vídeo'}</b>
-                    <em>▶</em>
-                  </span>
+              : (item.kind === 'spotify' ? profile.spotify_enabled : profile.youtube_enabled) && mediaPreviewUrls[item.kind] && (
+                  <article class={`preview-player preview-player--${item.kind}`} data-preview-media={item.kind}>
+                    <iframe
+                      src={mediaPreviewUrls[item.kind]}
+                      title={item.kind === 'spotify' ? 'Vista previa de Spotify' : 'Vista previa de YouTube'}
+                      tabindex="-1"
+                      loading="lazy"
+                      allow={item.kind === 'spotify' ? 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture' : 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'}
+                      allowfullscreen={item.kind === 'youtube'}
+                    ></iframe>
+                  </article>
                 ))}
           </div>
           <p class="preview-brand">T · hecho con Trazli</p>
@@ -366,6 +376,8 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
 </Layout>
 
 <script>
+  import { getSpotifyEmbedUrl, getYouTubeEmbedUrl } from '../../lib/media.js';
+
   const previewPhone = document.querySelector<HTMLElement>('.preview-phone');
   const getField = (selector: string) => document.querySelector<HTMLInputElement>(selector);
   const setText = (selector: string, value: string) => {
@@ -531,11 +543,22 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
       if (platform) {
         const url = getField(`[data-media-url="${platform}"]`)?.value.trim();
         const enabled = getField(`[data-media-enabled="${platform}"]`)?.checked;
-        if (!url || !enabled) continue;
+        const embedUrl = platform === 'spotify' ? getSpotifyEmbedUrl(url) : getYouTubeEmbedUrl(url);
+        if (!embedUrl || !enabled) continue;
 
-        const item = document.createElement('span');
+        const item = document.createElement('article');
+        item.className = `preview-player preview-player--${platform}`;
         item.dataset.previewMedia = platform;
-        item.innerHTML = `<i aria-hidden="true">${platform === 'spotify' ? '♫' : '▶'}</i><b><small>${platform === 'spotify' ? 'Spotify' : 'YouTube'}</small>${platform === 'spotify' ? 'Reproductor de música' : 'Reproductor de vídeo'}</b><em>▶</em>`;
+        const iframe = document.createElement('iframe');
+        iframe.src = embedUrl;
+        iframe.title = platform === 'spotify' ? 'Vista previa de Spotify' : 'Vista previa de YouTube';
+        iframe.tabIndex = -1;
+        iframe.loading = 'lazy';
+        iframe.allow = platform === 'spotify'
+          ? 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
+          : 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = platform === 'youtube';
+        item.appendChild(iframe);
         target.appendChild(item);
         continue;
       }
@@ -995,11 +1018,20 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   .preview-links :global(small) { opacity: 0.45; font-size: 0.48rem; }
   .preview-links :global(b) { font-size: 0.62rem; }
   .preview-links :global(i) { display: grid; width: 1.5rem; height: 1.5rem; place-items: center; border-radius: 50%; background: var(--preview-accent); font-size: 0.65rem; font-style: normal; }
-  .preview-links :global(span[data-preview-media] > i) { background: #1ed760; color: #092b16; font-weight: 900; }
-  .preview-links :global(span[data-preview-media='youtube'] > i) { border-radius: 0.45rem; background: #ff0033; color: white; }
-  .preview-links :global(span[data-preview-media] b) { display: grid; font-size: 0.57rem; }
-  .preview-links :global(span[data-preview-media] b small) { opacity: 0.55; font-size: 0.44rem; letter-spacing: 0.06em; text-transform: uppercase; }
-  .preview-links :global(span[data-preview-media] em) { font-size: 0.55rem; font-style: normal; }
+  .preview-links :global(.preview-player) {
+    overflow: hidden;
+    border: 1px solid var(--soft);
+    border-radius: 0.75rem;
+    background: #101010;
+  }
+  .preview-links :global(.preview-player iframe) {
+    display: block;
+    width: 100%;
+    border: 0;
+    pointer-events: none;
+  }
+  .preview-links :global(.preview-player--spotify iframe) { height: 152px; }
+  .preview-links :global(.preview-player--youtube iframe) { aspect-ratio: 16 / 9; }
   .preview-brand { margin: auto 0 0; text-align: center; opacity: 0.5; font-size: 0.5rem; }
   .preview-phone--pulse .preview-phone__screen {
     background:
@@ -1011,6 +1043,7 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   .preview-phone--pulse .preview-profile h2 { font-family: var(--font-body); font-weight: 900; text-transform: uppercase; }
   .preview-phone--pulse .preview-bio { text-align: center; }
   .preview-phone--pulse .preview-links :global(span) { border: 2px solid var(--preview-text); border-radius: 0; background: var(--preview-accent); box-shadow: 4px 4px 0 var(--preview-text); }
+  .preview-phone--pulse .preview-links :global(.preview-player) { border: 2px solid var(--preview-text); border-radius: 0; box-shadow: 4px 4px 0 var(--preview-text); }
   .preview-phone--aura .preview-phone__screen {
     padding-inline: 1.15rem;
     background:
@@ -1113,13 +1146,15 @@ const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:$
   .preview-phone--frame .preview-links :global(span:nth-child(even)) {
     background: color-mix(in srgb, var(--preview-accent) 24%, var(--preview-bg));
   }
+  .preview-phone--frame .preview-links :global(.preview-player) {
+    border: 3px solid var(--preview-text);
+    border-radius: 0;
+  }
   .preview-phone--frame .preview-links :global(i) {
     border: 2px solid var(--preview-text);
     border-radius: 0;
     background: var(--preview-bg);
   }
-  .preview-phone--frame .preview-links :global(span[data-preview-media] > i) { background: #1ed760; color: #092b16; }
-  .preview-phone--frame .preview-links :global(span[data-preview-media='youtube'] > i) { background: #ff0033; color: white; }
   .preview-note { color: var(--muted); text-align: center; font-size: 0.68rem; }
   @media (max-width: 980px) {
     .dashboard { grid-template-columns: minmax(0, 1fr) 330px; gap: 1.5rem; }
