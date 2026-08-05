@@ -6,7 +6,11 @@ import {
   parseAvatarUpload,
 } from '../../../lib/avatar.js';
 import { normalizeSlug, safeUrl, validateSlug } from '../../../lib/validation.js';
-import { normalizeSpotifyTrackUrl, normalizeYouTubeVideoUrl } from '../../../lib/media.js';
+import {
+  normalizeMediaPosition,
+  normalizeSpotifyTrackUrl,
+  normalizeYouTubeVideoUrl,
+} from '../../../lib/media.js';
 import { sameOrigin } from '../../../lib/security.js';
 
 export const prerender = false;
@@ -58,7 +62,7 @@ export async function POST({ request, locals, redirect }) {
     const rawUrl = String(form.get(`linkUrl${index}`) || '').trim();
     const submittedPosition = Number(form.get(`linkPosition${index}`));
     const position = Number.isInteger(submittedPosition)
-      ? Math.min(5, Math.max(0, submittedPosition))
+      ? Math.min(7, Math.max(0, submittedPosition))
       : index;
 
     if (!title && !rawUrl) continue;
@@ -105,8 +109,10 @@ export async function POST({ request, locals, redirect }) {
       textColor: String(form.get('textColor') || ''),
       spotifyUrl,
       spotifyEnabled: Boolean(spotifyUrl) && form.get('spotifyEnabled') === 'on',
+      spotifyPosition: normalizeMediaPosition(form.get('spotifyPosition'), 6),
       youtubeUrl,
       youtubeEnabled: Boolean(youtubeUrl) && form.get('youtubeEnabled') === 'on',
+      youtubePosition: normalizeMediaPosition(form.get('youtubePosition'), 7),
       published: form.get('published') === 'on',
       links,
     });

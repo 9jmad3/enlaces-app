@@ -5,6 +5,7 @@ import {
   getYouTubeEmbedUrl,
   normalizeSpotifyTrackUrl,
   normalizeYouTubeVideoUrl,
+  normalizeMediaPosition,
 } from '../src/lib/media.js';
 
 const spotifyId = '4uLU6hMCjMI75M1A2tKUQC';
@@ -29,4 +30,11 @@ test('normalizes common YouTube video URLs', () => {
 test('builds privacy-conscious media embed URLs', () => {
   assert.equal(getSpotifyEmbedUrl(`https://open.spotify.com/track/${spotifyId}`), `https://open.spotify.com/embed/track/${spotifyId}`);
   assert.equal(getYouTubeEmbedUrl(`https://www.youtube.com/watch?v=${youtubeId}`), `https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0`);
+});
+
+test('keeps media positions inside the shared content list', () => {
+  assert.equal(normalizeMediaPosition('0', 6), 0);
+  assert.equal(normalizeMediaPosition('7', 6), 7);
+  assert.equal(normalizeMediaPosition('20', 6), 7);
+  assert.equal(normalizeMediaPosition('invalid', 6), 6);
 });

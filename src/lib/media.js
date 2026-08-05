@@ -59,3 +59,8 @@ export function getYouTubeEmbedUrl(value) {
   const videoId = getYouTubeVideoId(value);
   return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0` : '';
 }
+
+export function normalizeMediaPosition(value, fallback) {
+  const position = Number(value);
+  return Number.isInteger(position) ? Math.min(7, Math.max(0, position)) : fallback;
+}
