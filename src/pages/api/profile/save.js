@@ -12,6 +12,7 @@ import {
   normalizeYouTubeVideoUrl,
 } from '../../../lib/media.js';
 import { sameOrigin } from '../../../lib/security.js';
+import { normalizeSocialUrl } from '../../../lib/social.js';
 
 export const prerender = false;
 
@@ -37,6 +38,9 @@ export async function POST({ request, locals, redirect }) {
   const bio = String(form.get('bio') || '').trim();
   const rawSpotifyUrl = String(form.get('spotifyUrl') || '').trim();
   const rawYouTubeUrl = String(form.get('youtubeUrl') || '').trim();
+  const rawInstagramUrl = String(form.get('instagramUrl') || '').trim();
+  const rawTikTokUrl = String(form.get('tiktokUrl') || '').trim();
+  const rawYouTubeSocialUrl = String(form.get('youtubeSocialUrl') || '').trim();
 
   const slugError = validateSlug(slug);
   if (slugError) return redirect(panelError(slugError));
@@ -56,16 +60,30 @@ export async function POST({ request, locals, redirect }) {
     return redirect(panelError('El enlace de YouTube no corresponde a un video valido.'));
   }
 
+  const instagramUrl = normalizeSocialUrl('instagram', rawInstagramUrl);
+  const tiktokUrl = normalizeSocialUrl('tiktok', rawTikTokUrl);
+  const youtubeSocialUrl = normalizeSocialUrl('youtube', rawYouTubeSocialUrl);
+  if (rawInstagramUrl && !instagramUrl) {
+    return redirect(panelError('El enlace de Instagram no es valido.'));
+  }
+  if (rawTikTokUrl && !tiktokUrl) {
+    return redirect(panelError('El enlace de TikTok no es valido.'));
+  }
+  if (rawYouTubeSocialUrl && !youtubeSocialUrl) {
+    return redirect(panelError('El enlace del canal de YouTube no es valido.'));
+  }
+
   const links = [];
   for (let index = 0; index < 6; index += 1) {
     const title = String(form.get(`linkTitle${index}`) || '').trim();
     const rawUrl = String(form.get(`linkUrl${index}`) || '').trim();
+    const sectionTitle = String(form.get(`linkSection${index}`) || '').trim();
     const submittedPosition = Number(form.get(`linkPosition${index}`));
     const position = Number.isInteger(submittedPosition)
       ? Math.min(7, Math.max(0, submittedPosition))
       : index;
 
-    if (!title && !rawUrl) continue;
+    if (!title && !rawUrl && !sectionTitle) continue;
     if (!title || !rawUrl) {
       return redirect(panelError(`Completa el titulo y la URL del enlace ${position + 1}.`));
     }
@@ -80,6 +98,7 @@ export async function POST({ request, locals, redirect }) {
       url,
       enabled: form.get(`linkEnabled${index}`) === 'on',
       position,
+      sectionTitle: sectionTitle.slice(0, 80),
     });
   }
   links.sort((first, second) => first.position - second.position);
@@ -113,6 +132,12 @@ export async function POST({ request, locals, redirect }) {
       youtubeUrl,
       youtubeEnabled: Boolean(youtubeUrl) && form.get('youtubeEnabled') === 'on',
       youtubePosition: normalizeMediaPosition(form.get('youtubePosition'), 7),
+      instagramUrl,
+      instagramEnabled: Boolean(instagramUrl) && form.get('instagramEnabled') === 'on',
+      tiktokUrl,
+      tiktokEnabled: Boolean(tiktokUrl) && form.get('tiktokEnabled') === 'on',
+      youtubeSocialUrl,
+      youtubeSocialEnabled: Boolean(youtubeSocialUrl) && form.get('youtubeSocialEnabled') === 'on',
       published: form.get('published') === 'on',
       links,
     });

@@ -25,6 +25,12 @@ function mapFallback(profile) {
     youtube_url: '',
     youtube_enabled: false,
     youtube_position: 7,
+    instagram_url: '',
+    instagram_enabled: false,
+    tiktok_url: '',
+    tiktok_enabled: false,
+    youtube_social_url: '',
+    youtube_social_enabled: false,
     published: true,
     updated_at: null,
     links: profile.links.map((link, index) => ({
@@ -33,6 +39,7 @@ function mapFallback(profile) {
       url: link.link,
       enabled: true,
       position: index,
+      section_title: '',
     })),
   };
 }
@@ -47,7 +54,7 @@ export async function getPublicProfile(slug) {
     const profile = result.rows[0];
     if (profile?.published && !profile.suspended_at) {
       const links = await query(
-        `SELECT id, title, url, enabled, position
+        `SELECT id, title, url, enabled, position, section_title
          FROM profile_links
          WHERE profile_id = $1 AND enabled = TRUE
          ORDER BY position`,
@@ -113,7 +120,7 @@ export async function getEditableProfile(userId) {
   if (!profile) return null;
 
   const links = await query(
-    `SELECT id, title, url, enabled, position
+    `SELECT id, title, url, enabled, position, section_title
      FROM profile_links
      WHERE profile_id = $1
      ORDER BY position`,
@@ -199,9 +206,15 @@ export async function saveProfile(userId, data) {
          youtube_url = $15,
          youtube_enabled = $16,
          youtube_position = $17,
-         published = CASE WHEN suspended_at IS NULL THEN $18 ELSE FALSE END,
+         instagram_url = $18,
+         instagram_enabled = $19,
+         tiktok_url = $20,
+         tiktok_enabled = $21,
+         youtube_social_url = $22,
+         youtube_social_enabled = $23,
+         published = CASE WHEN suspended_at IS NULL THEN $24 ELSE FALSE END,
          updated_at = NOW()
-       WHERE id = $19`,
+       WHERE id = $25`,
       [
         data.slug,
         data.displayName.slice(0, 60),
@@ -220,6 +233,12 @@ export async function saveProfile(userId, data) {
         data.youtubeUrl,
         data.youtubeEnabled,
         data.youtubePosition,
+        data.instagramUrl,
+        data.instagramEnabled,
+        data.tiktokUrl,
+        data.tiktokEnabled,
+        data.youtubeSocialUrl,
+        data.youtubeSocialEnabled,
         data.published,
         profileId,
       ],
@@ -229,13 +248,14 @@ export async function saveProfile(userId, data) {
     for (const [position, link] of data.links.entries()) {
       const url = safeUrl(link.url);
       const title = String(link.title || '').trim().slice(0, 60);
+      const sectionTitle = String(link.sectionTitle || '').trim().slice(0, 80);
       if (!title || !url) continue;
 
       await client.query(
         `INSERT INTO profile_links
-          (id, profile_id, title, url, enabled, position)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [randomUUID(), profileId, title, url, link.enabled, position],
+          (id, profile_id, title, url, enabled, position, section_title)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [randomUUID(), profileId, title, url, link.enabled, position, sectionTitle],
       );
     }
   });
