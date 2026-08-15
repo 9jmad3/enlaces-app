@@ -1272,16 +1272,9 @@ const getPreviewLinkIcon = (title: string, value: string) => {
     padding: 1.1rem 0.8rem 0.8rem;
     align-items: center;
     flex-direction: column;
-    border: 1px solid color-mix(in srgb, white 65%, var(--preview-text) 12%);
-    border-bottom: 0;
-    border-radius: 1.5rem 1.5rem 0 0;
-    background: color-mix(in srgb, var(--preview-bg) 54%, transparent);
+    border: 0;
+    background: transparent;
     text-align: center;
-    backdrop-filter: blur(12px);
-  }
-  .preview-phone--aura .preview-profile:has(+ .preview-bio[hidden]) {
-    border-bottom: 1px solid color-mix(in srgb, white 65%, var(--preview-text) 12%);
-    border-radius: 1.5rem;
   }
   .preview-phone--aura .preview-avatar {
     width: 6.5rem;
@@ -1301,10 +1294,8 @@ const getPreviewLinkIcon = (title: string, value: string) => {
   .preview-phone--aura .preview-bio {
     margin: 0;
     padding: 0.8rem 1rem 1.15rem;
-    border: 1px solid color-mix(in srgb, white 65%, var(--preview-text) 12%);
-    border-top: 0;
-    border-radius: 0 0 1.5rem 1.5rem;
-    background: color-mix(in srgb, var(--preview-bg) 54%, transparent);
+    border: 0;
+    background: transparent;
     text-align: center;
   }
   .preview-phone--aura .preview-socials { margin-top: 0.7rem; }

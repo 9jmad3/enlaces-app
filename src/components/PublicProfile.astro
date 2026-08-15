@@ -624,13 +624,10 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
   .profile-page--aura .profile-card {
     margin-block: auto 1.5rem;
     padding: clamp(1.4rem, 6vw, 2.5rem);
-    border: 1px solid color-mix(in srgb, white 55%, var(--profile-text) 10%);
-    border-radius: 2.2rem;
-    background: color-mix(in srgb, var(--profile-bg) 68%, transparent);
-    box-shadow:
-      0 30px 80px color-mix(in srgb, var(--profile-text) 15%, transparent),
-      inset 0 1px 0 color-mix(in srgb, white 75%, transparent);
-    backdrop-filter: blur(24px) saturate(1.25);
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
   }
   .profile-page--aura .profile-card__decor {
     top: -5rem;
