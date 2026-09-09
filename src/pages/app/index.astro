@@ -38,7 +38,8 @@ const verify = Astro.url.searchParams.get('verify');
 const verified = Astro.url.searchParams.get('verified');
 const verificationSent = Astro.url.searchParams.get('verificationSent');
 const passwordReset = Astro.url.searchParams.get('passwordReset');
-const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:${profile.accent_color};--preview-text:${profile.text_color};--preview-avatar-x:${profile.avatar_position_x ?? 50}%;--preview-avatar-y:${profile.avatar_position_y ?? 20}%`;
+const customLinkStyle = profile.link_color_enabled ? `--preview-link:${profile.link_color};` : '';
+const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:${profile.accent_color};--preview-text:${profile.text_color};${customLinkStyle}--preview-avatar-x:${profile.avatar_position_x ?? 50}%;--preview-avatar-y:${profile.avatar_position_y ?? 20}%`;
 const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:${profile.avatar_position_y ?? 20}%`;
 const mediaPreviewUrls = {
   spotify: getSpotifyEmbedUrl(profile.spotify_url),
@@ -270,6 +271,22 @@ const getPreviewLinkIcon = (title: string, value: string) => {
             <span>Texto</span>
             <input type="color" name="textColor" value={profile.text_color} data-color="text" />
           </label>
+          <div class="link-color-option">
+            <label for="linkColor">Enlaces</label>
+            <input
+              id="linkColor"
+              type="color"
+              name="linkColor"
+              value={profile.link_color || profile.accent_color}
+              data-color="link"
+              data-link-color-picker
+              disabled={!profile.link_color_enabled}
+            />
+            <label class="link-color-toggle">
+              <input name="linkColorEnabled" type="checkbox" checked={profile.link_color_enabled} data-link-color-enabled />
+              Personalizar
+            </label>
+          </div>
         </div>
       </section>
 
@@ -651,10 +668,23 @@ const getPreviewLinkIcon = (title: string, value: string) => {
         bg: '--preview-bg',
         accent: '--preview-accent',
         text: '--preview-text',
+        link: '--preview-link',
       };
       const variable = variables[input.dataset.color || ''];
       if (variable) previewPhone?.style.setProperty(variable, input.value);
     });
+  });
+
+  const linkColorEnabled = document.querySelector<HTMLInputElement>('[data-link-color-enabled]');
+  const linkColorPicker = document.querySelector<HTMLInputElement>('[data-link-color-picker]');
+  linkColorEnabled?.addEventListener('change', () => {
+    if (!linkColorPicker) return;
+    linkColorPicker.disabled = !linkColorEnabled.checked;
+    if (linkColorEnabled.checked) {
+      previewPhone?.style.setProperty('--preview-link', linkColorPicker.value);
+    } else {
+      previewPhone?.style.removeProperty('--preview-link');
+    }
   });
 
   document.querySelectorAll<HTMLInputElement>('input[name="templateId"]').forEach((input) => {
@@ -1079,10 +1109,16 @@ const getPreviewLinkIcon = (title: string, value: string) => {
   }
   .template-option input:checked + .template-preview { border-color: var(--coral); transform: translateY(-2px); }
   .template-option > small { display: block; margin-top: 0.45rem; color: var(--muted); text-align: center; font-size: 0.72rem; }
-  .color-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
-  .color-options label { display: flex; min-height: 3.6rem; padding: 0.6rem; align-items: center; gap: 0.65rem; border: 1px solid var(--line); border-radius: 0.85rem; }
-  .color-options span { font-size: 0.74rem; font-weight: 750; }
-  .color-options input { width: 2.3rem; height: 2.3rem; padding: 0; border: 0; background: none; cursor: pointer; }
+  .color-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+  .color-options > label,
+  .color-options > .link-color-option { display: flex; min-height: 3.6rem; padding: 0.6rem; align-items: center; gap: 0.65rem; border: 1px solid var(--line); border-radius: 0.85rem; }
+  .color-options > label > span,
+  .link-color-option > label:first-child { font-size: 0.74rem; font-weight: 750; }
+  .color-options input[type="color"] { width: 2.3rem; height: 2.3rem; padding: 0; border: 0; background: none; cursor: pointer; }
+  .color-options input[type="color"]:disabled { opacity: 0.35; cursor: not-allowed; }
+  .color-options .link-color-option { flex-wrap: wrap; }
+  .link-color-toggle { display: flex; margin-left: auto; align-items: center; gap: 0.35rem; color: var(--muted); font-size: 0.62rem; cursor: pointer; }
+  .link-color-option input[type="checkbox"] { accent-color: var(--coral); }
   .sections-guide { display: flex; padding: 0.8rem 0.9rem; align-items: flex-start; gap: 0.75rem; border: 1px solid color-mix(in srgb, var(--coral) 24%, var(--line)); border-radius: 0.85rem; background: color-mix(in srgb, var(--coral) 6%, white); }
   .sections-guide > span { display: grid; width: 2rem; height: 2rem; place-items: center; flex: 0 0 auto; border-radius: 0.55rem; background: var(--ink); color: white; font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; }
   .sections-guide p { margin: 0; color: var(--muted); font-size: 0.7rem; line-height: 1.5; }
@@ -1212,7 +1248,7 @@ const getPreviewLinkIcon = (title: string, value: string) => {
     align-items: center;
     border: 1px solid var(--soft);
     border-radius: 0.75rem;
-    background: color-mix(in srgb, var(--preview-bg) 82%, white);
+    background: var(--preview-link, color-mix(in srgb, var(--preview-bg) 82%, white));
   }
   .preview-links :global(small) { opacity: 0.45; font-size: 0.48rem; }
   .preview-links :global(.preview-link-icon) {
@@ -1259,7 +1295,7 @@ const getPreviewLinkIcon = (title: string, value: string) => {
   .preview-phone--pulse .preview-bio { text-align: center; }
   .preview-phone--pulse .preview-socials a { border: 2px solid var(--preview-text); border-radius: 0; background: var(--preview-accent); box-shadow: 2px 2px 0 var(--preview-text); }
   .preview-phone--pulse .preview-links :global(.preview-section-title) { text-align: center; }
-  .preview-phone--pulse .preview-links :global(span) { border: 2px solid var(--preview-text); border-radius: 0; background: var(--preview-accent); box-shadow: 4px 4px 0 var(--preview-text); }
+  .preview-phone--pulse .preview-links :global(span) { border: 2px solid var(--preview-text); border-radius: 0; background: var(--preview-link, var(--preview-accent)); box-shadow: 4px 4px 0 var(--preview-text); }
   .preview-phone--pulse .preview-links :global(.preview-player) { border: 2px solid var(--preview-text); border-radius: 0; box-shadow: 4px 4px 0 var(--preview-text); }
   .preview-phone--aura .preview-phone__screen {
     padding-inline: 1.15rem;
@@ -1305,7 +1341,7 @@ const getPreviewLinkIcon = (title: string, value: string) => {
     min-height: 3.4rem;
     border-color: color-mix(in srgb, white 65%, var(--preview-text) 12%);
     border-radius: 1rem;
-    background: color-mix(in srgb, var(--preview-bg) 55%, transparent);
+    background: var(--preview-link, color-mix(in srgb, var(--preview-bg) 55%, transparent));
     backdrop-filter: blur(10px);
   }
   .preview-phone--aura .preview-links :global(.preview-player) {
@@ -1367,7 +1403,7 @@ const getPreviewLinkIcon = (title: string, value: string) => {
     min-height: 3.5rem;
     border: 1px solid color-mix(in srgb, var(--preview-text) 12%, transparent);
     border-radius: 1rem;
-    background: color-mix(in srgb, var(--preview-bg) 78%, rgba(255, 255, 255, 0.7));
+    background: var(--preview-link, color-mix(in srgb, var(--preview-bg) 78%, rgba(255, 255, 255, 0.7)));
     box-shadow: 0 8px 18px color-mix(in srgb, var(--preview-text) 9%, transparent);
     animation: preview-frame-enter 500ms cubic-bezier(.2,.75,.25,1) both;
   }
