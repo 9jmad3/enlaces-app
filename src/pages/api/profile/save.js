@@ -128,6 +128,7 @@ export async function POST({ request, locals, redirect }) {
       textColor: String(form.get('textColor') || ''),
       linkColor: String(form.get('linkColor') || ''),
       linkColorEnabled: form.get('linkColorEnabled') === 'on',
+      linkTextColor: String(form.get('linkTextColor') || ''),
       spotifyUrl,
       spotifyEnabled: Boolean(spotifyUrl) && form.get('spotifyEnabled') === 'on',
       spotifyPosition: normalizeMediaPosition(form.get('spotifyPosition'), 6),

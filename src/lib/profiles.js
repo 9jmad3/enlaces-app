@@ -21,6 +21,7 @@ function mapFallback(profile) {
     text_color: '#17201D',
     link_color: '#E65336',
     link_color_enabled: false,
+    link_text_color: '#17201D',
     spotify_url: '',
     spotify_enabled: false,
     spotify_position: 6,
@@ -216,9 +217,10 @@ export async function saveProfile(userId, data) {
          youtube_social_enabled = $23,
          link_color = $24,
          link_color_enabled = $25,
-         published = CASE WHEN suspended_at IS NULL THEN $26 ELSE FALSE END,
+         link_text_color = $26,
+         published = CASE WHEN suspended_at IS NULL THEN $27 ELSE FALSE END,
          updated_at = NOW()
-       WHERE id = $27`,
+       WHERE id = $28`,
       [
         data.slug,
         data.displayName.slice(0, 60),
@@ -245,6 +247,7 @@ export async function saveProfile(userId, data) {
         data.youtubeSocialEnabled,
         validHex(data.linkColor, '#E65336'),
         data.linkColorEnabled,
+        validHex(data.linkTextColor, data.textColor),
         data.published,
         profileId,
       ],

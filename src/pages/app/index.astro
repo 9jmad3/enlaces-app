@@ -39,7 +39,7 @@ const verified = Astro.url.searchParams.get('verified');
 const verificationSent = Astro.url.searchParams.get('verificationSent');
 const passwordReset = Astro.url.searchParams.get('passwordReset');
 const customLinkStyle = profile.link_color_enabled ? `--preview-link:${profile.link_color};` : '';
-const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:${profile.accent_color};--preview-text:${profile.text_color};${customLinkStyle}--preview-avatar-x:${profile.avatar_position_x ?? 50}%;--preview-avatar-y:${profile.avatar_position_y ?? 20}%`;
+const profileStyle = `--preview-bg:${profile.background_color};--preview-accent:${profile.accent_color};--preview-text:${profile.text_color};--preview-link-text:${profile.link_text_color || profile.text_color};${customLinkStyle}--preview-avatar-x:${profile.avatar_position_x ?? 50}%;--preview-avatar-y:${profile.avatar_position_y ?? 20}%`;
 const avatarStyle = `--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:${profile.avatar_position_y ?? 20}%`;
 const mediaPreviewUrls = {
   spotify: getSpotifyEmbedUrl(profile.spotify_url),
@@ -287,6 +287,10 @@ const getPreviewLinkIcon = (title: string, value: string) => {
               Personalizar
             </label>
           </div>
+          <label>
+            <span>Texto de enlaces</span>
+            <input type="color" name="linkTextColor" value={profile.link_text_color || profile.text_color} data-color="linkText" />
+          </label>
         </div>
       </section>
 
@@ -669,6 +673,7 @@ const getPreviewLinkIcon = (title: string, value: string) => {
         accent: '--preview-accent',
         text: '--preview-text',
         link: '--preview-link',
+        linkText: '--preview-link-text',
       };
       const variable = variables[input.dataset.color || ''];
       if (variable) previewPhone?.style.setProperty(variable, input.value);
@@ -1249,6 +1254,7 @@ const getPreviewLinkIcon = (title: string, value: string) => {
     border: 1px solid var(--soft);
     border-radius: 0.75rem;
     background: var(--preview-link, color-mix(in srgb, var(--preview-bg) 82%, white));
+    color: var(--preview-link-text);
   }
   .preview-links :global(small) { opacity: 0.45; font-size: 0.48rem; }
   .preview-links :global(.preview-link-icon) {

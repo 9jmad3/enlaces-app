@@ -29,6 +29,7 @@ interface Profile {
   text_color: string;
   link_color?: string;
   link_color_enabled?: boolean;
+  link_text_color?: string;
   spotify_url?: string;
   spotify_enabled?: boolean;
   spotify_position?: number;
@@ -81,7 +82,7 @@ const initials = profile.display_name
   .join('')
   .toUpperCase();
 const customLinkStyle = profile.link_color_enabled ? `--profile-link:${profile.link_color};` : '';
-const style = `--profile-bg:${profile.background_color};--profile-accent:${profile.accent_color};--profile-text:${profile.text_color};${customLinkStyle}--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:${profile.avatar_position_y ?? 20}%`;
+const style = `--profile-bg:${profile.background_color};--profile-accent:${profile.accent_color};--profile-text:${profile.text_color};--profile-link-text:${profile.link_text_color || profile.text_color};${customLinkStyle}--avatar-x:${profile.avatar_position_x ?? 50}%;--avatar-y:${profile.avatar_position_y ?? 20}%`;
 ---
 
 <main class:list={[
@@ -422,7 +423,7 @@ const style = `--profile-bg:${profile.background_color};--profile-accent:${profi
     border: 1px solid var(--soft-contrast);
     border-radius: 1rem;
     background: var(--profile-link, color-mix(in srgb, var(--profile-bg) 84%, white));
-    color: var(--profile-text);
+    color: var(--profile-link-text);
     box-shadow: 0 9px 22px color-mix(in srgb, var(--profile-text) 6%, transparent);
     text-decoration: none;
     transition: transform 180ms ease, box-shadow 180ms ease;
